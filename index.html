@@ -25,31 +25,58 @@
     padding:10px 14px;
     display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap
   }
-  header h1{margin:0;font-size:16px;font-weight:800}
+  header h1{margin:0;font-size:18px;font-weight:800}
   .controls{display:flex;gap:10px;align-items:center}
   select,input[type="date"]{
     background:#0b1528;border:1px solid #22314b;color:var(--ink);
-    padding:6px 10px;border-radius:8px;font-size:13px
+    padding:8px 12px;border-radius:10px;font-size:14px
   }
 
-  .container{padding:16px;max-width:1100px;margin:0 auto}
+  .container{padding:16px;max-width:100%;margin:0 auto}
 
-  .lista{display:grid;gap:12px;margin-top:12px}
+  /* Cards modalidades */
+  .mods-cards{display:flex;gap:12px;overflow:auto;margin-bottom:14px}
+  .mod-card{min-width:160px;border-radius:14px;padding:14px;display:flex;flex-direction:column;font-weight:700;color:#fff}
+  .mod-card span{font-size:14px;opacity:.8}
+  .mod-card b{font-size:18px;margin-top:6px}
+
+  .mod-card.total {
+    background:#0f172a; 
+    border:1px solid var(--line);
+    color:#fff;
+  }
+  .mod-card.boleto {
+    background:linear-gradient(180deg,#a855f7,#6b21a8);
+    color:#fff;
+  }
+
+  /* Lista */
+  .lista{display:grid;gap:14px;margin-top:14px}
   .titulo{
     background:linear-gradient(180deg,#101a2f,#0f172a);
-    border:1px solid var(--line);border-radius:12px;
-    padding:12px;display:flex;justify-content:space-between;align-items:center
+    border:1px solid var(--line);border-radius:14px;
+    padding:14px;display:flex;justify-content:space-between;align-items:center
   }
-  .info{display:grid;gap:6px;font-size:13px}
+  .info{display:grid;gap:8px;font-size:15px}
   .row{color:var(--muted);display:flex;gap:10px;flex-wrap:wrap}
   .row b{color:var(--ink)}
-  .pill{padding:3px 8px;border-radius:999px;font-weight:700;font-size:12px}
+  .pill{padding:5px 10px;border-radius:999px;font-weight:700;font-size:13px}
   .pill.ok{background:#0e2a1b;color:#b6f3c5;border:1px solid #155e32}
   .pill.warn{background:#2a0e0e;color:#ffb4b4;border:1px solid #7a1e1e}
-  .actions{display:flex;gap:6px}
-  .mini{padding:6px 10px;border-radius:8px;font-weight:800;font-size:12px;cursor:pointer}
+  .actions{display:flex;gap:8px}
+  .mini{padding:8px 12px;border-radius:10px;font-weight:800;font-size:13px;cursor:pointer}
   .mini.liquidar{background:linear-gradient(180deg,#4f46e5,#3730a3);color:#fff;border:0}
   .mini.hist{background:linear-gradient(180deg,#ffd166,#f59e0b);border:0;color:#2a1500}
+
+  /* Responsivo */
+  @media(max-width:768px){
+    header h1{font-size:20px}
+    .mod-card{min-width:140px;padding:16px}
+    .mod-card span{font-size:16px}
+    .mod-card b{font-size:20px}
+    .info{font-size:16px}
+    .mini{font-size:15px;padding:10px 14px}
+  }
 </style>
 </head>
 <body>
@@ -62,15 +89,19 @@
   </header>
 
   <div class="container">
+    <!-- Totais por modalidade -->
+    <div id="modsCards" class="mods-cards"></div>
+
+    <!-- Lista -->
     <div id="lista" class="lista"></div>
   </div>
 
   <!-- Modal histórico -->
   <div id="modalHist" style="position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;align-items:center;justify-content:center">
-    <div style="background:#0f172a;padding:14px;border-radius:12px;max-width:400px;width:90%">
+    <div style="background:#0f172a;padding:16px;border-radius:14px;max-width:420px;width:90%">
       <button onclick="fecharHist()" style="float:right">Fechar</button>
       <h3>Histórico</h3>
-      <div id="histBody" style="white-space:pre-wrap;font-size:13px;color:#cbd5e1"></div>
+      <div id="histBody" style="white-space:pre-wrap;font-size:14px;color:#cbd5e1"></div>
     </div>
   </div>
 
@@ -104,11 +135,17 @@ async function loadTitulos(empresas,diaISO){
 function renderLista(){
   const lista=$("lista"); lista.innerHTML="";
   const empFiltro=$("filtroEmpresa").value;
+  let somaModal={};
+
   for(const emp of Object.keys(TITULOS)){
     if(empFiltro && empFiltro!=="Todos" && emp!==empFiltro) continue;
     const arr=TITULOS[emp]||[];
     arr.forEach((t,idx)=>{
       const valor=Number(String(t.valor).replace("R$","").replace(/\./g,"").replace(",","."))||0;
+
+      // acumula modalidades vindas do GAS
+      somaModal[t.meio_pagamento]=(somaModal[t.meio_pagamento]||0)+valor;
+
       const id=ID(emp,idx);
       const card=document.createElement("div");
       card.className="titulo";
@@ -124,6 +161,29 @@ function renderLista(){
         </div>`;
       lista.appendChild(card);
     });
+  }
+
+  renderModalidades(somaModal);
+}
+
+function renderModalidades(sum){
+  const mods=$("modsCards"); mods.innerHTML="";
+  let total=0;
+  for(const[k,v] of Object.entries(sum)){
+    let classe="mod-card";
+    if(k.toLowerCase().includes("boleto")) classe="mod-card boleto";
+
+    const c=document.createElement("div");
+    c.className=classe;
+    c.innerHTML=`<span>${k}</span><b>${BRL(v)}</b>`;
+    mods.appendChild(c);
+    total+=v;
+  }
+  if(total>0){
+    const c=document.createElement("div");
+    c.className="mod-card total";
+    c.innerHTML=`<span>Total Geral</span><b>${BRL(total)}</b>`;
+    mods.prepend(c);
   }
 }
 
@@ -151,7 +211,6 @@ async function refresh(){
 }
 
 (function boot(){
-  // preenche select empresas
   const sel=$("filtroEmpresa");
   sel.innerHTML=`<option value="Todos">Todas</option>`+EMP_DEFAULT.map(e=>`<option value="${e}">${e}</option>`).join("");
   sel.onchange=refresh;
