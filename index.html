@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<title>Painel Financeiro • Aprovados</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<style>
+  :root{
+    --bg:#0b1220;
+    --card:#0f172a;
+    --ink:#e5f0ff;
+    --muted:#a8b3c7;
+    --line:#243043;
+    --green:#16a34a;
+    --red:#ef4444;
+    --amber:#f59e0b;
+    --blue:#4f46e5;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Inter,system-ui;background:var(--bg);color:var(--ink)}
+
+  header{
+    background:linear-gradient(180deg,#0f172a,#0b1220);
+    border-bottom:1px solid var(--line);
+    padding:10px 14px;
+    display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap
+  }
+  header h1{margin:0;font-size:16px;font-weight:800}
+  .controls{display:flex;gap:10px;align-items:center}
+  select,input[type="date"]{
+    background:#0b1528;border:1px solid #22314b;color:var(--ink);
+    padding:6px 10px;border-radius:8px;font-size:13px
+  }
+
+  .container{padding:16px;max-width:1100px;margin:0 auto}
+
+  .lista{display:grid;gap:12px;margin-top:12px}
+  .titulo{
+    background:linear-gradient(180deg,#101a2f,#0f172a);
+    border:1px solid var(--line);border-radius:12px;
+    padding:12px;display:flex;justify-content:space-between;align-items:center
+  }
+  .info{display:grid;gap:6px;font-size:13px}
+  .row{color:var(--muted);display:flex;gap:10px;flex-wrap:wrap}
+  .row b{color:var(--ink)}
+  .pill{padding:3px 8px;border-radius:999px;font-weight:700;font-size:12px}
+  .pill.ok{background:#0e2a1b;color:#b6f3c5;border:1px solid #155e32}
+  .pill.warn{background:#2a0e0e;color:#ffb4b4;border:1px solid #7a1e1e}
+  .actions{display:flex;gap:6px}
+  .mini{padding:6px 10px;border-radius:8px;font-weight:800;font-size:12px;cursor:pointer}
+  .mini.liquidar{background:linear-gradient(180deg,#4f46e5,#3730a3);color:#fff;border:0}
+  .mini.hist{background:linear-gradient(180deg,#ffd166,#f59e0b);border:0;color:#2a1500}
+</style>
+</head>
+<body>
+  <header>
+    <h1>Painel • Títulos Aprovados</h1>
+    <div class="controls">
+      <input type="date" id="filtroData" />
+      <select id="filtroEmpresa"></select>
+    </div>
+  </header>
+
+  <div class="container">
+    <div id="lista" class="lista"></div>
+  </div>
+
+  <!-- Modal histórico -->
+  <div id="modalHist" style="position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;align-items:center;justify-content:center">
+    <div style="background:#0f172a;padding:14px;border-radius:12px;max-width:400px;width:90%">
+      <button onclick="fecharHist()" style="float:right">Fechar</button>
+      <h3>Histórico</h3>
+      <div id="histBody" style="white-space:pre-wrap;font-size:13px;color:#cbd5e1"></div>
+    </div>
+  </div>
+
+<script>
+const endpointTitulos = "https://script.google.com/macros/s/AKfycbwt9y43T8Ya0AhNusue3PTekaBPDnrqSK33dsbnmOKezcm3wnSrUz3z2jO_9BoJd8MH/exec";
+const EMP_DEFAULT = ["CAP DELICIA","CAP VILLA","CAP PADARIA","CAP MERCATTO","CAP M.KIDS"];
+
+let TITULOS={};
+
+const $=id=>document.getElementById(id);
+const BRL=n=>(isNaN(n)?0:n).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+const iso=d=>new Date(d).toISOString().slice(0,10);
+const ID=(emp,idx)=>`${emp.replace(/\s+/g,'_')}__${idx}`;
+
+async function loadTitulos(empresas,diaISO){
+  TITULOS={};
+  const resps=await Promise.all(empresas.map(emp=>
+    fetch(`${endpointTitulos}?action=listar&empresa=${encodeURIComponent(emp)}`)
+      .then(r=>r.json().then(d=>({emp,data:d.titulos||d})))
+  ));
+  resps.forEach(({emp,data})=>{
+    const arr=data.filter(t=>{
+      const tDia=iso(t.vencimento);
+      const st=(t.status==="Sim"?"Pendente":t.status);
+      return st==="Aprovado" && (!diaISO||tDia===diaISO);
+    });
+    TITULOS[emp]=arr;
+  });
+}
+
+function renderLista(){
+  const lista=$("lista"); lista.innerHTML="";
+  const empFiltro=$("filtroEmpresa").value;
+  for(const emp of Object.keys(TITULOS)){
+    if(empFiltro && empFiltro!=="Todos" && emp!==empFiltro) continue;
+    const arr=TITULOS[emp]||[];
+    arr.forEach((t,idx)=>{
+      const valor=Number(String(t.valor).replace("R$","").replace(/\./g,"").replace(",","."))||0;
+      const id=ID(emp,idx);
+      const card=document.createElement("div");
+      card.className="titulo";
+      card.innerHTML=`
+        <div class="info">
+          <div class="row"><b>${t.fornecedor}</b> • ${emp}</div>
+          <div class="row">Venc: <b>${iso(t.vencimento).split("-").reverse().join("/")}</b> • Valor: <b>${BRL(valor)}</b></div>
+          <span class="pill ok">Aprovado</span>
+        </div>
+        <div class="actions">
+          <button class="mini liquidar" onclick="acaoStatus('${emp}',${idx},'Liquidado')">Liquidar</button>
+          <button class="mini hist" onclick="abrirHist('${id}',${valor})">Histórico</button>
+        </div>`;
+      lista.appendChild(card);
+    });
+  }
+}
+
+async function acaoStatus(emp,idx,novo){
+  try{
+    await fetch(`${endpointTitulos}?action=atualizar&empresa=${encodeURIComponent(emp)}&index=${idx}&status=${encodeURIComponent(novo)}`);
+    alert(`Título marcado como ${novo}`);
+    refresh();
+  }catch(e){console.error(e)}
+}
+
+function abrirHist(id,valor){
+  const arr=JSON.parse(localStorage.getItem("hist_"+id)||"[]");
+  const texto=arr.length?arr.map(x=>`${x.data} — ${x.acao} — ${BRL(x.valor)}`).join("\n"):"Sem histórico.";
+  $("histBody").textContent=texto;
+  $("modalHist").style.display="flex";
+}
+function fecharHist(){$("modalHist").style.display="none"}
+
+async function refresh(){
+  const diaISO=$("filtroData").value;
+  const empresas=EMP_DEFAULT;
+  await loadTitulos(empresas,diaISO);
+  renderLista();
+}
+
+(function boot(){
+  // preenche select empresas
+  const sel=$("filtroEmpresa");
+  sel.innerHTML=`<option value="Todos">Todas</option>`+EMP_DEFAULT.map(e=>`<option value="${e}">${e}</option>`).join("");
+  sel.onchange=refresh;
+  $("filtroData").onchange=refresh;
+  refresh();
+})();
+</script>
+</body>
+</html>
