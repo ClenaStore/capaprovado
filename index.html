@@ -23,9 +23,9 @@
     padding:10px 14px;border-radius:10px;font-size:14px;width:100%}
 
   .container{padding:16px;max-width:1100px;margin:0 auto}
-  .lista{display:grid;gap:14px;margin-top:14px}
+  .lista{display:grid;gap:12px;margin-top:14px}
   .titulo{background:#101a2f;border:1px solid var(--line);
-    border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px;position:relative}
+    border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:6px}
 
   .topo{display:flex;justify-content:space-between;align-items:center}
   .topo label{font-size:13px;display:flex;align-items:center;gap:6px;color:var(--muted)}
@@ -33,12 +33,14 @@
   .pill.aprovado{background:#0e2a1b;color:#b6f3c5;border:1px solid #155e32}
   .pill.liquidado{background:#1e1e2e;color:#9ae6b4;border:1px solid #2f855a}
 
-  .row{font-size:14px;color:var(--muted)}
-  .row b{color:var(--ink)}
+  .conteudo{display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .info{display:flex;flex-direction:column;gap:4px;font-size:14px;flex:1}
+  .info b{color:var(--ink)}
+  .row{color:var(--muted)}
 
-  .btn-card{width:100%;padding:10px;border-radius:10px;
+  .btn-card{padding:8px 14px;border-radius:8px;
     background:linear-gradient(180deg,#19c37d,#16a34a);color:#fff;
-    font-weight:700;font-size:14px;cursor:pointer;border:0;margin-top:8px}
+    font-weight:700;font-size:14px;cursor:pointer;border:0;white-space:nowrap}
   .btn-card:hover{opacity:.9}
 
   .footer{position:fixed;left:0;right:0;bottom:0;padding:12px;background:#0f172a;
@@ -102,10 +104,14 @@ function renderLista(){
           <label><input type="checkbox" onchange="toggleSel(this,'${emp}',${t.linha},${valor})"> Selecionar</label>
           <span class="pill ${statusFiltro.toLowerCase()}">${statusFiltro}</span>
         </div>
-        <div><b>${t.fornecedor}</b> • ${emp}</div>
-        <div class="row">Venc: <b>${iso(t.vencimento).split("-").reverse().join("/")}</b> • Meio: <b>${t.meio_pagamento}</b></div>
-        <div class="row">Valor: <b>${BRL(valor)}</b></div>
-        ${statusFiltro==="Aprovado"?`<button class="btn-card" onclick="liquidar('${emp}',${t.linha})">✓ Liquidar</button>`:""}
+        <div class="conteudo">
+          <div class="info">
+            <div><b>${t.fornecedor}</b> • ${emp}</div>
+            <div class="row">Venc: <b>${iso(t.vencimento).split("-").reverse().join("/")}</b> • Meio: <b>${t.meio_pagamento}</b></div>
+            <div class="row">Valor: <b>${BRL(valor)}</b></div>
+          </div>
+          ${statusFiltro==="Aprovado"?`<button class="btn-card" onclick="liquidar('${emp}',${t.linha})">✓ Liquidar</button>`:""}
+        </div>
       `;
       lista.appendChild(card);
     });
