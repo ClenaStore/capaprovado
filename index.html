@@ -49,7 +49,6 @@
   .mini{padding:6px 9px;border-radius:10px;border:1px solid #22314b;background:#0b1528;color:#fff;font-weight:800;cursor:pointer;position:relative}
   .mini.aprovar{background:linear-gradient(180deg,#19c37d,#16a34a)}
   .mini.negar{background:linear-gradient(180deg,#fb6969,#ef4444)}
-  .mini.hist{background:linear-gradient(180deg,#ffd166,#f59e0b);color:#2a1500}
   .mini.obs{background:linear-gradient(180deg,#60a5fa,#1d4ed8)}
   .mini.loading{opacity:.75;pointer-events:none}
 
@@ -117,15 +116,6 @@
   <button id="btnMassa" class="btn-massa" style="display:none">Aprovar selecionados</button>
 </div>
 
-<!-- modal histórico -->
-<div id="modalHist" class="modal">
-  <div class="box">
-    <button class="close" onclick="fecharHist()">Fechar</button>
-    <h3>Histórico</h3>
-    <div id="histBody" style="white-space:pre-wrap;font-size:13px;color:#cbd5e1"></div>
-  </div>
-</div>
-
 <!-- modal observação -->
 <div id="modalObs" class="modal">
   <div class="box">
@@ -149,9 +139,6 @@ const ID=(emp,idx)=>`${emp.replace(/\s+/g,'_')}__${idx}`;
 function showOverlay(){$("overlay").style.display="flex"}
 function hideOverlay(){$("overlay").style.display="none"}
 
-$("btnEmpresas").onclick=()=>{const m=$("menuEmpresas");m.style.display=(m.style.display==="block"?"none":"block")};
-document.addEventListener("click",e=>{const m=$("menuEmpresas");if(!m.contains(e.target)&&e.target!==$("btnEmpresas"))m.style.display="none"});
-
 async function loadTitulos(empresas,inicio,fim,filtroStatus,filtroMeio){
   TITULOS={};
   const resps=await Promise.all(empresas.map(emp=>
@@ -164,7 +151,7 @@ async function loadTitulos(empresas,inicio,fim,filtroStatus,filtroMeio){
       return (!inicio || d>=inicio) && (!fim || d<=fim);
     });
     const arr=all.filter(t=>{
-      let st=(t.status==="Sim"?"Pendente":t.status);
+      let st=(t.aprovada || t.status || "Pendente");
       const meio=(t.meio_pagamento||"Outros");
       const statusOk=filtroStatus==="Todos"?true:(st===filtroStatus);
       const meioOk=filtroMeio==="Todos"?true:(meio.toLowerCase().includes(filtroMeio.toLowerCase()));
@@ -185,7 +172,9 @@ function renderLista(){
       const meio=t.meio_pagamento||"Outros";
       somaModal[meio]=(somaModal[meio]||0)+valor;
       const id=ID(emp,idx);
-      const st=(t.status==="Sim"?"Pendente":t.status);
+      const st=(t.aprovada || t.status || "Pendente");
+      const hist=(t.historico || ""); // Coluna T
+      const obs=(t.observacao || ""); // Coluna AI
       const card=document.createElement("div");
       card.className="titulo";card.dataset.id=id;card.dataset.emp=emp;card.dataset.idx=idx;card.dataset.valor=valor;
       card.innerHTML=`
@@ -194,12 +183,13 @@ function renderLista(){
           <div class="row"><b>${t.fornecedor}</b> • ${emp}</div>
           <div class="row">Venc: <b>${iso(t.vencimento).split("-").reverse().join("/")}</b> • Meio: <b>${meio}</b></div>
           <div class="row">Valor: <b>${BRL(valor)}</b> <span class="pill" data-status>${st}</span></div>
+          ${hist ? `<div class="row" style="color:#facc15">Histórico: ${hist}</div>` : ""}
+          ${obs ? `<div class="row" style="color:#60a5fa">Obs: ${obs}</div>` : ""}
         </div>
         <div class="actions">
-          <button class="mini obs" onclick="abrirObs('${id}','${emp}',${idx})">✏️</button>
+          <button class="mini obs" onclick="abrirObs('${id}','${emp}',${idx},\`${obs}\`)">✏️</button>
           <button class="mini aprovar" onclick="acaoStatus(this,'Aprovado')">✓</button>
           <button class="mini negar" onclick="acaoStatus(this,'Negado')">✗</button>
-          <button class="mini hist" onclick="abrirHist('${id}')">H</button>
         </div>`;
       setPill(card.querySelector("[data-status]"),st);
       lista.appendChild(card);
@@ -260,29 +250,12 @@ async function acaoStatus(btn,novo){
   try{await fetch(`${endpointTitulos}?action=atualizar&empresa=${encodeURIComponent(emp)}&index=${idx}&status=${encodeURIComponent(novo)}`)}catch(e){console.error(e)}
   btn.classList.remove("loading");
 }
-$("btnMassa").onclick=async()=>{
-  const bt=$("btnMassa");bt.classList.add("loading");
-  for(const s of SELEC){
-    const card=document.querySelector(`.titulo[data-id="${s.id}"]`);
-    if(!card)continue;
-    await acaoStatus(card.querySelector(".mini.aprovar"),"Aprovado");
-    card.querySelector(".ck input").checked=false;
-  }
-  SELEC=[];$("master").checked=false;renderSelecionados();bt.classList.remove("loading");
-}
-
-/* Histórico */
-function abrirHist(id){
-  const arr=JSON.parse(localStorage.getItem("hist_"+id)||"[]");
-  $("histBody").textContent=arr.length?arr.map(x=>`${x.data} — ${x.acao}`).join("\n"):"Sem histórico.";
-  $("modalHist").style.display="flex";
-}
-function fecharHist(){$("modalHist").style.display="none"}
+$("btnMassa").onclick=async()=>{for(const s of SELEC){const card=document.querySelector(`.titulo[data-id="${s.id}"]`);if(!card)continue;await acaoStatus(card.querySelector(".mini.aprovar"),"Aprovado");card.querySelector(".ck input").checked=false;}SELEC=[];$("master").checked=false;renderSelecionados()}
 
 /* Observação */
-function abrirObs(id,emp,idx){
+function abrirObs(id,emp,idx,txt){
   obsContext={id,emp,idx};
-  $("textoObs").value="";
+  $("textoObs").value=txt||"";
   $("modalObs").style.display="flex";
 }
 function fecharObs(){$("modalObs").style.display="none"}
@@ -304,17 +277,15 @@ async function refresh(){
   const filtroMeio=$("filtroMeio").value;
   const empresa=document.querySelector("#menuEmpresas input:checked").value;
   const periodo=$("filtroPeriodo").value;
-  const inicio=periodo || "";
-  const fim=periodo || "";
+  const inicio=periodo||"",fim=periodo||"";
   await loadTitulos([empresa],inicio,fim,filtro,filtroMeio);
   $("empresaSelecionada").textContent=empresa;
   renderLista();hideOverlay();
 }
 (function boot(){
-  // inicia já com a data de hoje
-  $("filtroPeriodo").value=new Date().toISOString().slice(0,10);
-  const M=$("menuEmpresas");
-  EMP_DEFAULT.forEach((emp,i)=>{
+  const hoje=new Date().toISOString().slice(0,10);
+  $("filtroPeriodo").value=hoje;
+  const M=$("menuEmpresas");EMP_DEFAULT.forEach((emp,i)=>{
     const lbl=document.createElement("label");
     lbl.innerHTML=`<input type="radio" name="empresaSel" value="${emp}" ${i===0?"checked":""}/> ${emp}`;
     lbl.querySelector("input").onchange=()=>{refresh();$("menuEmpresas").style.display="none"};
