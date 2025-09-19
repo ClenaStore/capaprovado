@@ -138,7 +138,7 @@ function renderLista(){
   const lista=$("lista");lista.innerHTML="";SELEC=[];
   TITULOS.forEach(t=>{
     const card=document.createElement("div");
-    card.className="titulo";card.dataset.linha=t.linha;card.dataset.emp=t.empresa;
+    card.className="titulo";card.dataset.linha=t.linha;card.dataset.emp=t.empresa;card.dataset.status=t.status;
     const valor=Number(String(t.valor).replace("R$","").replace(/\./g,"").replace(",","."))||0;
     card.dataset.valor=valor;
 
@@ -153,7 +153,9 @@ function renderLista(){
       <div class="row">Valor: <b>${BRL(valor)}</b></div>
       <div class="row">Histórico: <b>${t.historico||"-"}</b></div>
       <div class="row">Obs: <b>${t.observacoes||"-"}</b></div>
-      <div class="acoes"><button class="btn liquidar" onclick="liquidar(this)">✓ Liquidar</button></div>
+      <div class="acoes">
+        <button class="btn liquidar" onclick="liquidar(this)" ${st!=="Aprovado"?"disabled style='opacity:0.5;cursor:not-allowed'":""}>✓ Liquidar</button>
+      </div>
     `;
     lista.appendChild(card);
   });
@@ -162,30 +164,56 @@ function renderLista(){
 
 function toggleSel(chk){
   const card=chk.closest(".titulo");
-  if(chk.checked)SELEC.push(card);else SELEC=SELEC.filter(c=>c!==card);
+  if(chk.checked){
+    if(card.dataset.status==="Aprovado"){ // só permite selecionar aprovados
+      SELEC.push(card);
+    }else{
+      chk.checked=false;
+      alert("Somente títulos aprovados podem ser liquidados.");
+    }
+  }else{
+    SELEC=SELEC.filter(c=>c!==card);
+  }
   salvarSelecoes();
 }
 
 async function liquidar(btn){
   const card=btn.closest(".titulo");
+  if(card.dataset.status!=="Aprovado"){alert("Somente títulos aprovados podem ser liquidados.");return;}
   const emp=card.dataset.emp,linha=card.dataset.linha;
   try{
-    await fetch(`${endpoint}?action=atualizar&empresa=${encodeURIComponent(emp)}&linha=${linha}&status=Liquidado`);
-    card.querySelector(".pill").textContent="Liquidado";
-    card.querySelector(".pill").className="pill liquidado";
+    const r=await fetch(`${endpoint}?action=atualizar&empresa=${encodeURIComponent(emp)}&linha=${linha}&status=Liquidado`);
+    const data=await r.json();
+    if(data.success){
+      card.querySelector(".pill").textContent="Liquidado";
+      card.querySelector(".pill").className="pill liquidado";
+      card.dataset.status="Liquidado";
+      btn.disabled=true;
+      btn.style.opacity="0.5";
+    }else{
+      alert("Erro ao liquidar título.");
+    }
     salvarSelecoes();
   }catch(e){console.error(e);}
 }
 
 async function liquidarMassa(){
   for(const card of SELEC){
+    if(card.dataset.status!=="Aprovado")continue;
     const emp=card.dataset.emp,linha=card.dataset.linha;
     try{
-      await fetch(`${endpoint}?action=atualizar&empresa=${encodeURIComponent(emp)}&linha=${linha}&status=Liquidado`);
-      card.querySelector(".pill").textContent="Liquidado";
-      card.querySelector(".pill").className="pill liquidado";
+      const r=await fetch(`${endpoint}?action=atualizar&empresa=${encodeURIComponent(emp)}&linha=${linha}&status=Liquidado`);
+      const data=await r.json();
+      if(data.success){
+        card.querySelector(".pill").textContent="Liquidado";
+        card.querySelector(".pill").className="pill liquidado";
+        card.dataset.status="Liquidado";
+        const btn=card.querySelector(".btn.liquidar");
+        if(btn){btn.disabled=true;btn.style.opacity="0.5";}
+      }
     }catch(e){console.error(e);}
   }
+  SELEC=[];
   salvarSelecoes();
 }
 $("btnMassa").onclick=liquidarMassa;
