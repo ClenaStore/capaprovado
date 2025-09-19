@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <title>Painel Financeiro • CAP</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <style>
@@ -68,7 +68,6 @@
   .mini.aprovar{background:linear-gradient(180deg,#19c37d,#16a34a)}
   .mini.negar{background:linear-gradient(180deg,#fb6969,#ef4444)}
   .mini.obs{background:linear-gradient(180deg,#60a5fa,#1d4ed8)}
-  .mini.hist{background:linear-gradient(180deg,#f59e0b,#b45309)}
   .mini.loading{opacity:.75;pointer-events:none}
 
   .footer{position:fixed;left:0;right:0;bottom:0;display:flex;flex-direction:column;gap:10px;align-items:stretch;z-index:15;padding:12px}
@@ -147,15 +146,6 @@
   </div>
 </div>
 
-<!-- modal histórico -->
-<div id="modalHist" class="modal">
-  <div class="box">
-    <button class="close" onclick="fecharHist()">Fechar</button>
-    <h3>Histórico de alterações</h3>
-    <div id="histContent" style="max-height:340px;overflow:auto;font-size:14px"></div>
-  </div>
-</div>
-
 <script>
 const endpointTitulos="https://script.google.com/macros/s/AKfycbzzLGp4BH0X3-mdhMqG_e07wrnUo9yFXUmJ8wdP9iVVgPxk1-tnmjsCIAEAb7r_0_yd/exec";
 const EMP_DEFAULT=["CAP DELICIA","CAP VILLA","CAP PADARIA","CAP MERCATTO","CAP M.KIDS"];
@@ -168,7 +158,6 @@ const ID=(emp,linha)=>`${emp.replace(/\s+/g,'_')}__${linha}`;
 
 function setLoading(btn,on=true){if(on)btn.classList.add("loading");else btn.classList.remove("loading");}
 
-// normaliza meios
 function normalizeMeio(meio){
   meio = (meio||"Outros").toLowerCase();
   if(meio.includes("pix")) return "Pix";
@@ -177,33 +166,12 @@ function normalizeMeio(meio){
   return "Outros";
 }
 
-// histórico local
 function addHistLocal(id,texto){
   let hist=JSON.parse(localStorage.getItem("hist_"+id)||"[]");
   hist.push({data:new Date().toLocaleString("pt-BR"),texto});
   localStorage.setItem("hist_"+id,JSON.stringify(hist));
 }
 function getHistLocal(id){return JSON.parse(localStorage.getItem("hist_"+id)||"[]");}
-
-async function abrirHistorico(id,emp,linha){
-  $("histContent").innerHTML="<i>Carregando...</i>";
-  $("modalHist").style.display="flex";
-  try{
-    const r=await fetch(`${endpointTitulos}?action=historico&empresa=${encodeURIComponent(emp)}&linha=${linha}`);
-    const histPlan=await r.json(); 
-    const histLocal=getHistLocal(id);
-    const todos=[...histPlan,...histLocal];
-    $("histContent").innerHTML=todos.length
-      ? todos.map(h=>`
-        <div style="border-bottom:1px solid #22314b;padding:8px 0">
-          <b>${h.data||""} ${h.hora||""}</b><br>
-          ${h.status? "Status: "+h.status:""} ${h.texto? h.texto:""}<br>
-          ${h.obs? "Obs: "+h.obs:""}
-        </div>`).join("")
-      : "<i>Sem histórico registrado</i>";
-  }catch(e){console.error(e);}
-}
-function fecharHist(){$("modalHist").style.display="none"}
 
 function renderMods(){
   const mods=$("mods");mods.innerHTML="";
@@ -235,6 +203,7 @@ function renderLista(){
       const obs=(t.observacao || "");
       const histColuna=(t.historico || "");
       const histLocal=getHistLocal(id);
+
       const card=document.createElement("div");
       card.className="titulo";card.dataset.id=id;card.dataset.emp=emp;card.dataset.linha=t.linha;card.dataset.valor=valor;
       card.innerHTML=`
@@ -243,10 +212,9 @@ function renderLista(){
           <div class="row"><b>${t.fornecedor}</b> • ${emp}</div>
           <div class="row">Venc: <b>${iso(t.vencimento).split("-").reverse().join("/")}</b> • Meio: <b>${t.meio_pagamento||"Outros"}</b></div>
           <div class="row">Valor: <b>${BRL(valor)}</b></div>
-         ${obs ? `<div class="row obs" style="color:#60a5fa">Obs (planilha): ${obs}</div>` : ""}
-${histLocal.length ? `<div class="row obs" style="color:#a8b3c7">Obs (local): ${histLocal.map(h=>h.texto).join("<br>")}</div>` : ""}
+          ${obs ? `<div class="row obs" style="color:#60a5fa">Obs (planilha): ${obs}</div>` : ""}
+          ${histLocal.length ? `<div class="row obs" style="color:#a8b3c7">Obs (local): ${histLocal.map(h=>h.texto).join("<br>")}</div>` : ""}
           ${histColuna ? `<div class="row hist">Histórico planilha: ${histColuna}</div>` : ""}
-          ${histLocal.length?`<div class="row hist">Histórico local:<br>${histLocal.map(h=>`- ${h.data}: ${h.texto}`).join("<br>")}</div>`:""}
         </div>
         <span class="pill" data-status>${st}</span>
         <div class="actions">
@@ -254,6 +222,14 @@ ${histLocal.length ? `<div class="row obs" style="color:#a8b3c7">Obs (local): ${
           <button class="mini negar" onclick="acaoStatus(this,'Negado')"><span>✗ Negar</span><div class="spinner-btn"></div></button>
           <button class="mini aprovar" onclick="acaoStatus(this,'Aprovado')"><span>✓ Aprovar</span><div class="spinner-btn"></div></button>
         </div>`;
+
+      // Duplo clique/toque seleciona card
+      card.addEventListener("dblclick", ()=>{
+        const chk = card.querySelector(".ck input");
+        chk.checked = !chk.checked;
+        toggleSel(chk);
+      });
+
       setPill(card.querySelector("[data-status]"),st);
       lista.appendChild(card);
     });
