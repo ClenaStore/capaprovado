@@ -188,6 +188,33 @@ async function abrirHistorico(id,emp,linha){
 }
 function fecharHist(){$("modalHist").style.display="none"}
 
+function renderMods(){
+  const mods=$("mods");
+  mods.innerHTML="";
+  let soma={Pix:0,Cartão:0,Boleto:0,Outros:0,Total:0};
+
+  for(const emp of Object.keys(TITULOS)){
+    (TITULOS[emp]||[]).forEach(t=>{
+      const valor=Number(String(t.valor).replace("R$","").replace(/\./g,"").replace(",","."))||0;
+      const meio=(t.meio_pagamento||"Outros");
+      soma.Total+=valor;
+      if(soma[meio]!==undefined) soma[meio]+=valor;
+      else soma.Outros+=valor;
+    });
+  }
+
+  const card=(cls,label,val)=>`
+    <div class="mod ${cls}">
+      <span>${label}</span>
+      <b>${BRL(val)}</b>
+    </div>`;
+
+  mods.innerHTML+=card("pix","Pix",soma.Pix);
+  mods.innerHTML+=card("cartao","Cartão",soma["Cartão"]);
+  mods.innerHTML+=card("boleto","Boleto",soma.Boleto);
+  mods.innerHTML+=card("total","Total",soma.Total);
+}
+
 function renderLista(){
   const lista=$("lista");lista.innerHTML="";SELEC=[];$("master").checked=false;
   let totalItens=0;
@@ -198,7 +225,7 @@ function renderLista(){
       const id=ID(emp,t.linha);
       const st=(t.status || "Pendente");
       const obs=(t.observacao || "");
-      const histColuna=(t.historico || ""); // histórico vindo da planilha
+      const histColuna=(t.historico || "");
       const histLocal=getHistLocal(id);
 
       const card=document.createElement("div");
@@ -225,6 +252,7 @@ function renderLista(){
     });
   }
   $("contagem").textContent=`${totalItens} ${totalItens===1?"item":"itens"}`;
+  renderMods();
 }
 
 function setPill(el,status){
