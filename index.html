@@ -18,82 +18,48 @@
     border-bottom:1px solid var(--line);padding:14px}
   header h1{font-size:18px;margin:0 0 12px 0;font-weight:800}
 
-  /* 🔹 Linha com filtros + resumo */
-  .row-top{
-    display:flex;
-    flex-wrap:wrap;
-    gap:12px;
-    width:100%;
-    align-items:center;
-    justify-content:space-between;
-  }
-  .row-filtros{
-    display:flex;
-    flex:3;
-    gap:8px;
-    min-width:280px;
-  }
-  select,input{
-    background:#0b1528;
-    border:1px solid #22314b;
-    color:var(--ink);
-    padding:10px 14px;
-    border-radius:10px;
-    font-size:15px;
-    width:100%;
-  }
+  .row-filtros{display:flex;gap:8px;width:100%;margin-bottom:8px}
+  select,input{background:#0b1528;border:1px solid #22314b;color:var(--ink);
+    padding:10px 14px;border-radius:10px;font-size:15px;width:100%}
 
-  /* 🔹 Resumo ao lado */
-  .status-resumo{
-    flex:2;
-    display:flex;
-    justify-content:flex-end;
-    gap:20px;
-    flex-wrap:wrap;
-    font-size:14px;
-    font-weight:700;
-  }
-  .status-linha.aprovado{color:var(--green)}
-  .status-linha.pendente{color:var(--amber)}
-  .status-linha.negado{color:var(--red)}
-  .status-linha.liquidado{color:var(--blue)}
+  .statusResumo{display:flex;flex-direction:column;gap:4px;margin-bottom:16px;padding-left:4px}
+  .statusResumo div{font-size:14px;font-weight:600}
+  .statusResumo .aprovado{color:var(--green)}
+  .statusResumo .pendente{color:var(--amber)}
+  .statusResumo .negado{color:var(--red)}
+  .statusResumo .liquidado{color:var(--blue)}
 
-  .container{padding:20px;max-width:1400px;margin:0 auto}
+  .container{padding:16px;max-width:100%;margin:0 auto}
+  .lista{display:flex;flex-direction:column;gap:12px;width:100%}
 
-  /* 🔹 Lista de cards */
-  .lista{display:flex;flex-direction:column;gap:18px;align-items:center}
   .titulo{
     width:100%;
-    max-width:900px;
     background:#101a2f;
     border:1px solid var(--line);
-    border-radius:12px;
-    padding:14px 18px;
+    border-radius:10px;
+    padding:8px 14px;
     display:flex;
     flex-direction:column;
     gap:6px;
     position:relative;
-    box-shadow:0 2px 6px rgba(0,0,0,0.4);
   }
+
   .topo{display:flex;align-items:center;justify-content:space-between}
-  .ck{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:14px}
+  .ck{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:13px}
   .ck input{width:18px;height:18px}
   .row{display:flex;gap:10px;flex-wrap:wrap;font-size:14px;color:var(--muted)}
   .row b{color:var(--ink);font-size:15px}
 
-  /* 🔹 Status nos cards */
   .pill{padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700}
   .pill.aprovado{background:#0e2a1b;color:#b6f3c5;border:1px solid #155e32}
   .pill.negado{background:#2a0e0e;color:#ffb4b4;border:1px solid #7a1e1e}
   .pill.pendente{background:#2a2a0e;color:#fff2b2;border:1px solid #b59d00}
-  .pill.liquidado{background:#0e1b2a;color:#c5e0ff;border:1px solid #1d4ed8}
+  .pill.liquidado{background:#0b2a3d;color:#b2d8ff;border:1px solid #2563eb}
 
-  /* 🔹 Botões */
-  .acoes{display:flex;justify-content:flex-end;margin-top:8px}
+  .acoes{display:flex;justify-content:flex-end;margin-top:6px}
   .btn{padding:8px 14px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;border:0}
   .liquidar{background:linear-gradient(180deg,#19c37d,#16a34a);color:#fff}
 
-  /* 🔹 Rodapé */
   .footer{position:fixed;left:0;right:0;bottom:0;padding:12px;background:#0f172a;border-top:1px solid var(--line);
     display:flex;justify-content:flex-end}
   .btn-massa{background:linear-gradient(180deg,#19c37d,#16a34a);color:#fff;border:0;border-radius:8px;
@@ -103,38 +69,35 @@
 <body>
 <header>
   <h1>Painel Financeiro • Aprovados</h1>
-  <div class="row-top">
-    <!-- filtros -->
-    <div class="row-filtros">
-      <select id="filtroStatus">
-        <option value="Aprovado" selected>Aprovados</option>
-        <option value="Negado">Negados</option>
-        <option value="Pendente">Pendentes</option>
-        <option value="Liquidado">Liquidados</option>
-      </select>
-      <select id="filtroMeio">
-        <option value="Todos" selected>Todos</option>
-        <option value="Pix">Pix</option>
-        <option value="Cartão">Cartão</option>
-        <option value="Boleto">Boleto</option>
-        <option value="Outros">Outros</option>
-      </select>
-      <input type="text" id="filtroPeriodo" placeholder="Selecione período" />
-      <select id="filtroEmpresa">
-        <option>CAP DELICIA</option>
-        <option>CAP VILLA</option>
-        <option>CAP PADARIA</option>
-        <option>CAP MERCATTO</option>
-        <option>CAP M.KIDS</option>
-      </select>
-    </div>
-    <!-- resumo -->
-    <div id="statusResumo" class="status-resumo"></div>
+  <div class="row-filtros">
+    <select id="filtroStatus">
+      <option value="Aprovado" selected>Aprovados</option>
+      <option value="Negado">Negados</option>
+      <option value="Pendente">Pendentes</option>
+      <option value="Liquidado">Liquidados</option>
+    </select>
+    <select id="filtroMeio">
+      <option value="Todos" selected>Todos</option>
+      <option value="Pix">Pix</option>
+      <option value="Cartão">Cartão</option>
+      <option value="Boleto">Boleto</option>
+      <option value="Outros">Outros</option>
+    </select>
+    <input type="text" id="filtroPeriodo" placeholder="Selecione período" />
+    <select id="filtroEmpresa">
+      <option>CAP DELICIA</option>
+      <option>CAP VILLA</option>
+      <option>CAP PADARIA</option>
+      <option>CAP MERCATTO</option>
+      <option>CAP M.KIDS</option>
+    </select>
   </div>
+
+  <!-- Resumo de status -->
+  <div id="statusResumo" class="statusResumo"></div>
 </header>
 
 <div class="container">
-  <!-- Lista -->
   <div id="lista" class="lista"></div>
 </div>
 
@@ -150,6 +113,26 @@ const iso = d => {const dt=new Date(d);dt.setMinutes(dt.getMinutes()-dt.getTimez
 
 let TITULOS=[],SELEC=[];
 
+// 🔹 Salvar seleção
+function salvarSelecoes(){
+  const ids=SELEC.map(c=>c.dataset.linha+"|"+c.dataset.emp);
+  localStorage.setItem("titulosSelecionados",JSON.stringify(ids));
+}
+
+// 🔹 Restaurar seleção
+function restaurarSelecoes(){
+  const ids=JSON.parse(localStorage.getItem("titulosSelecionados")||"[]");
+  ids.forEach(id=>{
+    const [linha,emp]=id.split("|");
+    const card=document.querySelector(`.titulo[data-linha="${linha}"][data-emp="${emp}"]`);
+    if(card){
+      const chk=card.querySelector("input[type=checkbox]");
+      chk.checked=true;
+      if(!SELEC.includes(card))SELEC.push(card);
+    }
+  });
+}
+
 function renderLista(){
   const lista=$("lista");lista.innerHTML="";SELEC=[];
   TITULOS.forEach(t=>{
@@ -158,8 +141,7 @@ function renderLista(){
     const valor=Number(String(t.valor).replace("R$","").replace(/\./g,"").replace(",","."))||0;
     card.dataset.valor=valor;
 
-    let st=t.status||"";
-    let pillClass=st.toLowerCase();
+    let st=t.status||"";let pillClass=st.toLowerCase();
     card.innerHTML=`
       <div class="topo">
         <label class="ck"><input type="checkbox" onchange="toggleSel(this)"> Selecionar</label>
@@ -172,11 +154,13 @@ function renderLista(){
     `;
     lista.appendChild(card);
   });
+  restaurarSelecoes();
 }
 
 function toggleSel(chk){
   const card=chk.closest(".titulo");
   if(chk.checked)SELEC.push(card);else SELEC=SELEC.filter(c=>c!==card);
+  salvarSelecoes();
 }
 
 async function liquidar(btn){
@@ -186,6 +170,7 @@ async function liquidar(btn){
     await fetch(`${endpoint}?action=atualizar&empresa=${encodeURIComponent(emp)}&linha=${linha}&status=Liquidado`);
     card.querySelector(".pill").textContent="Liquidado";
     card.querySelector(".pill").className="pill liquidado";
+    salvarSelecoes();
   }catch(e){console.error(e);}
 }
 
@@ -198,7 +183,7 @@ async function liquidarMassa(){
       card.querySelector(".pill").className="pill liquidado";
     }catch(e){console.error(e);}
   }
-  SELEC=[];
+  salvarSelecoes();
 }
 $("btnMassa").onclick=liquidarMassa;
 
@@ -238,10 +223,31 @@ function atualizarResumo(dados){
   });
 }
 
+// 🔹 salvar filtros
+function salvarFiltros(){
+  const filtros={
+    status:$("filtroStatus").value,
+    meio:$("filtroMeio").value,
+    periodo:$("filtroPeriodo").value,
+    empresa:$("filtroEmpresa").value
+  };
+  localStorage.setItem("filtrosFinanceiro",JSON.stringify(filtros));
+}
+function restaurarFiltros(){
+  const filtros=JSON.parse(localStorage.getItem("filtrosFinanceiro")||"{}");
+  if(filtros.status)$("filtroStatus").value=filtros.status;
+  if(filtros.meio)$("filtroMeio").value=filtros.meio;
+  if(filtros.periodo)$("filtroPeriodo").value=filtros.periodo;
+  if(filtros.empresa)$("filtroEmpresa").value=filtros.empresa;
+}
+
 (function boot(){
   const hoje=iso(new Date());
-  flatpickr("#filtroPeriodo",{mode:"range",dateFormat:"Y-m-d",defaultDate:[hoje,hoje],onClose:()=>refresh()});
-  ["filtroStatus","filtroMeio","filtroEmpresa"].forEach(id=>$(id).onchange=refresh);
+  flatpickr("#filtroPeriodo",{mode:"range",dateFormat:"Y-m-d",defaultDate:[hoje,hoje],onClose:()=>{salvarFiltros();refresh();}});
+  ["filtroStatus","filtroMeio","filtroEmpresa"].forEach(id=>{
+    $(id).onchange=()=>{salvarFiltros();refresh();};
+  });
+  restaurarFiltros();
   refresh();
 })();
 </script>
