@@ -250,7 +250,43 @@ async function acaoStatus(btn,novo){
   try{await fetch(`${endpointTitulos}?action=atualizar&empresa=${encodeURIComponent(emp)}&index=${idx}&status=${encodeURIComponent(novo)}`)}catch(e){console.error(e)}
   btn.classList.remove("loading");
 }
-$("btnMassa").onclick=async()=>{for(const s of SELEC){const card=document.querySelector(`.titulo[data-id="${s.id}"]`);if(!card)continue;await acaoStatus(card.querySelector(".mini.aprovar"),"Aprovado");card.querySelector(".ck input").checked=false;}SELEC=[];$("master").checked=false;renderSelecionados()}
+// Atualiza um card + GAS
+async function acaoStatus(btn,novo){
+  const card=btn.closest(".titulo");
+  const emp=card.dataset.emp,idx=card.dataset.idx;
+  btn.classList.add("loading");
+  setPill(card.querySelector("[data-status]"),novo);
+  try{
+    await fetch(`${endpointTitulos}?action=atualizar&empresa=${encodeURIComponent(emp)}&index=${idx}&status=${encodeURIComponent(novo)}`);
+  }catch(e){console.error(e)}
+  btn.classList.remove("loading");
+}
+
+// Atualização em massa
+async function atualizarStatusMassa(novo="Aprovado"){
+  for(const s of SELEC){
+    const card=document.querySelector(`.titulo[data-id="${s.id}"]`);
+    if(!card) continue;
+
+    // atualiza pill local
+    setPill(card.querySelector("[data-status]"),novo);
+
+    // chama GAS direto
+    try{
+      await fetch(`${endpointTitulos}?action=atualizar&empresa=${encodeURIComponent(s.emp)}&index=${s.idx}&status=${encodeURIComponent(novo)}`);
+    }catch(e){console.error(e)}
+
+    // desmarca checkbox
+    card.querySelector(".ck input").checked=false;
+  }
+  SELEC=[];
+  $("master").checked=false;
+  renderSelecionados();
+}
+
+// botão de massa chama essa nova
+$("btnMassa").onclick=()=>atualizarStatusMassa("Aprovado");
+
 
 /* Observação */
 function abrirObs(id,emp,idx,txt){
