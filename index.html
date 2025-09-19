@@ -173,8 +173,8 @@ function renderLista(){
       somaModal[meio]=(somaModal[meio]||0)+valor;
       const id=ID(emp,idx);
       const st=(t.aprovada || t.status || "Pendente");
-      const hist=(t.historico || ""); // Coluna T
-      const obs=(t.observacao || ""); // Coluna AI
+      const hist=(t.historico || "");
+      const obs=(t.observacao || "");
       const card=document.createElement("div");
       card.className="titulo";card.dataset.id=id;card.dataset.emp=emp;card.dataset.idx=idx;card.dataset.valor=valor;
       card.innerHTML=`
@@ -276,8 +276,9 @@ async function refresh(){
   const filtro=$("filtroStatus").value;
   const filtroMeio=$("filtroMeio").value;
   const empresa=document.querySelector("#menuEmpresas input:checked").value;
-  const periodo=$("filtroPeriodo").value;
-  const inicio=periodo||"",fim=periodo||"";
+  // sempre pega a data atual se não houver valor
+  const periodo=$("filtroPeriodo").value || new Date().toISOString().slice(0,10);
+  const inicio=periodo,fim=periodo;
   await loadTitulos([empresa],inicio,fim,filtro,filtroMeio);
   $("empresaSelecionada").textContent=empresa;
   renderLista();hideOverlay();
