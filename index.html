@@ -33,19 +33,22 @@
   .container{padding:16px;max-width:100%;margin:0 auto}
   .lista{display:flex;flex-direction:column;gap:12px;width:100%}
 
-  .titulo{
-    width:100%;
-    max-width:900px;  /* 🔹 mais estreito */
-    margin:0 auto;    /* 🔹 centralizado */
-    background:#101a2f;
-    border:1px solid var(--line);
-    border-radius:10px;
-    padding:8px 14px;
-    display:flex;
-    flex-direction:column;
-    gap:6px;
-    position:relative;
-  }
+.titulo{
+  width:100%;
+  max-width:700px;   /* 🔹 diminui a largura */
+  min-height:180px;  /* 🔹 aumenta a altura mínima */
+  margin:0 auto;
+  background:#101a2f;
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:16px 20px; /* 🔹 mais espaço interno */
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between; /* 🔹 conteúdo distribuído */
+  gap:10px;
+  position:relative;
+}
+
 
   .topo{display:flex;align-items:center;justify-content:space-between}
   .ck{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:13px}
