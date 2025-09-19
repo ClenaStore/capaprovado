@@ -58,13 +58,35 @@
   .pill.liquidado{background:#0b2a3d;color:#b2d8ff;border:1px solid #2563eb}
 
   .acoes{display:flex;justify-content:flex-end;margin-top:6px}
-  .btn{padding:6px 12px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;border:0}
+  .btn{padding:6px 12px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;border:0;position:relative}
   .liquidar{background:linear-gradient(180deg,#19c37d,#16a34a);color:#fff}
 
   .footer{position:fixed;left:0;right:0;bottom:0;padding:12px;background:#0f172a;border-top:1px solid var(--line);
     display:flex;justify-content:flex-end}
   .btn-massa{background:linear-gradient(180deg,#19c37d,#16a34a);color:#fff;border:0;border-radius:8px;
-    padding:12px 18px;font-weight:800;cursor:pointer;font-size:15px}
+    padding:12px 18px;font-weight:800;cursor:pointer;font-size:15px;position:relative}
+
+  /* spinner dentro do botão */
+  .btn.loading {
+    color: transparent !important;
+    pointer-events: none;
+  }
+  .btn.loading::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 16px;
+    height: 16px;
+    margin: -8px 0 0 -8px;
+    border: 2px solid #fff;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
 </style>
 </head>
 <body>
@@ -114,13 +136,13 @@ const iso = d => {const dt=new Date(d);dt.setMinutes(dt.getMinutes()-dt.getTimez
 
 let TITULOS=[],SELEC=[];
 
-// 🔹 Salvar seleção
+// Salvar seleção
 function salvarSelecoes(){
   const ids=SELEC.map(c=>c.dataset.linha+"|"+c.dataset.emp);
   localStorage.setItem("titulosSelecionados",JSON.stringify(ids));
 }
 
-// 🔹 Restaurar seleção
+// Restaurar seleção
 function restaurarSelecoes(){
   const ids=JSON.parse(localStorage.getItem("titulosSelecionados")||"[]");
   ids.forEach(id=>{
@@ -136,13 +158,13 @@ function restaurarSelecoes(){
 
 function renderLista(){
   const lista=$("lista");lista.innerHTML="";SELEC=[];
-  const abaSelecionada=$("filtroEmpresa").value; // pega a aba escolhida no filtro
+  const abaSelecionada=$("filtroEmpresa").value;
 
   TITULOS.forEach(t=>{
     const card=document.createElement("div");
     card.className="titulo";
     card.dataset.linha=t.linha;
-    card.dataset.emp=abaSelecionada; // usa a aba, não o nome exibido
+    card.dataset.emp=abaSelecionada;
     card.dataset.status=t.status;
 
     const valor=Number(String(t.valor).replace("R$","").replace(/\./g,"").replace(",","."))||0;
@@ -191,6 +213,7 @@ async function liquidar(btn){
   if(card.dataset.status!=="Aprovado"){alert("Somente títulos aprovados podem ser liquidados.");return;}
   const emp=card.dataset.emp,linha=card.dataset.linha;
   try{
+    btn.classList.add("loading");
     const r=await fetch(`${endpoint}?action=atualizar&empresa=${encodeURIComponent(emp)}&linha=${linha}&status=Liquidado`);
     const txt=await r.text();
     if(txt.includes("sucesso")||txt.includes("success")){
@@ -203,25 +226,35 @@ async function liquidar(btn){
     }
     salvarSelecoes();
   }catch(e){console.error(e);}
+  finally{
+    btn.classList.remove("loading");
+  }
 }
 
 async function liquidarMassa(){
+  const btnMassa=$("btnMassa");
+  btnMassa.classList.add("loading");
   for(const card of SELEC){
     if(card.dataset.status!=="Aprovado")continue;
     const emp=card.dataset.emp,linha=card.dataset.linha;
+    const btn=card.querySelector(".btn.liquidar");
     try{
+      if(btn) btn.classList.add("loading");
       const r=await fetch(`${endpoint}?action=atualizar&empresa=${encodeURIComponent(emp)}&linha=${linha}&status=Liquidado`);
       const txt=await r.text();
       if(txt.includes("sucesso")||txt.includes("success")){
         card.querySelector(".pill").textContent="Liquidado";
         card.querySelector(".pill").className="pill liquidado";
         card.dataset.status="Liquidado";
-        const btn=card.querySelector(".btn.liquidar");
         if(btn){btn.disabled=true;btn.style.opacity="0.5";}
       }
     }catch(e){console.error(e);}
+    finally{
+      if(btn) btn.classList.remove("loading");
+    }
   }
   SELEC=[];salvarSelecoes();
+  btnMassa.classList.remove("loading");
 }
 
 $("btnMassa").onclick=liquidarMassa;
