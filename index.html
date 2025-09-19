@@ -6,7 +6,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
   :root{
     --bg:#0b1220;--card:#0f172a;--ink:#e5f0ff;--muted:#a8b3c7;--line:#243043;
@@ -25,28 +24,19 @@
 
   .container{padding:20px;max-width:1400px;margin:0 auto}
 
-  /* 🔹 Card do gráfico */
-  .grafico-card{
-    background:#101a2f;
-    border:1px solid var(--line);
-    border-radius:12px;
-    padding:16px;
-    margin-bottom:28px;
-    text-align:center;
-    max-width:420px;
-    margin-left:auto;
-    margin-right:auto;
-  }
-  .grafico-card h2{
+  /* 🔹 Status em texto */
+  .status-resumo{
+    margin:16px 0;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
     font-size:15px;
-    margin:0 0 12px;
-    font-weight:700;
-    color:var(--muted);
   }
-  #graficoStatus{
-    width:100% !important;
-    height:200px !important;
-  }
+  .status-linha{font-weight:600}
+  .status-linha.aprovado{color:var(--green)}
+  .status-linha.pendente{color:var(--amber)}
+  .status-linha.negado{color:var(--red)}
+  .status-linha.liquidado{color:var(--blue)}
 
   /* 🔹 Lista de cards */
   .lista{display:flex;flex-direction:column;gap:18px;align-items:center}
@@ -69,7 +59,7 @@
   .row{display:flex;gap:10px;flex-wrap:wrap;font-size:14px;color:var(--muted)}
   .row b{color:var(--ink);font-size:15px}
 
-  /* 🔹 Status */
+  /* 🔹 Status nos cards */
   .pill{padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700}
   .pill.aprovado{background:#0e2a1b;color:#b6f3c5;border:1px solid #155e32}
   .pill.negado{background:#2a0e0e;color:#ffb4b4;border:1px solid #7a1e1e}
@@ -117,11 +107,8 @@
 </header>
 
 <div class="container">
-  <!-- Card do gráfico -->
-  <div class="grafico-card">
-    <h2>Status por Empresa</h2>
-    <canvas id="graficoStatus"></canvas>
-  </div>
+  <!-- Resumo em texto -->
+  <div id="statusResumo" class="status-resumo"></div>
 
   <!-- Lista -->
   <div id="lista" class="lista"></div>
@@ -137,7 +124,7 @@ const $=id=>document.getElementById(id);
 const BRL=n=>(isNaN(n)?0:n).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
 const iso = d => {const dt=new Date(d);dt.setMinutes(dt.getMinutes()-dt.getTimezoneOffset());return dt.toISOString().slice(0,10);};
 
-let TITULOS=[],SELEC=[],chart;
+let TITULOS=[],SELEC=[];
 
 function renderLista(){
   const lista=$("lista");lista.innerHTML="";SELEC=[];
@@ -209,26 +196,21 @@ async function refresh(){
            (!ini||d>=ini)&&(!fim||d<=fim);
   });
   renderLista();
-  atualizarGrafico(data.titulos||data);
+  atualizarResumo(data.titulos||data);
 }
 
-function atualizarGrafico(dados){
+function atualizarResumo(dados){
   const counts={Aprovado:0,Pendente:0,Negado:0,Liquidado:0};
   dados.forEach(t=>{if(counts[t.status]!==undefined)counts[t.status]++;});
-  const ctx=$("graficoStatus").getContext("2d");
-  if(chart)chart.destroy();
-  chart=new Chart(ctx,{
-    type:"doughnut",
-    data:{
-      labels:["Aprovado","Pendente","Negado","Liquidado"],
-      datasets:[{
-        data:[counts.Aprovado,counts.Pendente,counts.Negado,counts.Liquidado],
-        backgroundColor:["#16a34a","#f59e0b","#ef4444","#3b82f6"]
-      }]
-    },
-    options:{
-      plugins:{legend:{labels:{color:"#e5f0ff"}}}
-    }
+  const total=Object.values(counts).reduce((a,b)=>a+b,0);
+  const resumo=$("statusResumo");
+  resumo.innerHTML="";
+  Object.entries(counts).forEach(([status,qtd])=>{
+    const perc=total?((qtd/total)*100).toFixed(1):0;
+    const div=document.createElement("div");
+    div.className="status-linha "+status.toLowerCase();
+    div.textContent=`${status}: ${perc}%`;
+    resumo.appendChild(div);
   });
 }
 
