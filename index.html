@@ -149,7 +149,6 @@
 </div>
 
 <script>
-// mantém tudo que você já tinha + registra histórico local
 const endpointTitulos="https://script.google.com/macros/s/AKfycbzzLGp4BH0X3-mdhMqG_e07wrnUo9yFXUmJ8wdP9iVVgPxk1-tnmjsCIAEAb7r_0_yd/exec";
 const EMP_DEFAULT=["CAP DELICIA","CAP VILLA","CAP PADARIA","CAP MERCATTO","CAP M.KIDS"];
 let TITULOS={},SELEC=[],obsContext={};
@@ -199,6 +198,7 @@ function renderLista(){
       const id=ID(emp,t.linha);
       const st=(t.status || "Pendente");
       const obs=(t.observacao || "");
+      const histColuna=(t.historico || ""); // histórico vindo da planilha
       const histLocal=getHistLocal(id);
 
       const card=document.createElement("div");
@@ -210,6 +210,7 @@ function renderLista(){
           <div class="row">Venc: <b>${iso(t.vencimento).split("-").reverse().join("/")}</b> • Meio: <b>${t.meio_pagamento||"Outros"}</b></div>
           <div class="row">Valor: <b>${BRL(valor)}</b></div>
           ${obs ? `<div class="row obs" style="color:#60a5fa">Obs: ${obs}</div>` : ""}
+          ${histColuna ? `<div class="row hist">Histórico planilha: ${histColuna}</div>` : ""}
           ${histLocal.length?`<div class="row hist">Histórico local:<br>${histLocal.map(h=>`- ${h.data}: ${h.texto}`).join("<br>")}</div>`:""}
         </div>
         <span class="pill" data-status>${st}</span>
