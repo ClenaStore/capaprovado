@@ -323,21 +323,36 @@ async function refresh(inicio,fim){
 
 /* Inicialização */
 (function boot(){
-  const hoje=iso(new Date());
-  flatpickr("#filtroPeriodo",{mode:"range",dateFormat:"Y-m-d",locale:"pt",
-    onClose:function(sel){if(sel.length===2){const [ini,fim]=sel.map(d=>iso(d));refresh(ini,fim);}}
+  const hoje = iso(new Date());
+
+  flatpickr("#filtroPeriodo", {
+    mode: "range",
+    dateFormat: "Y-m-d",
+    locale: "pt",
+    defaultDate: [hoje, hoje], // <<< já coloca o dia atual no input
+    onClose: function(sel){
+      if(sel.length===2){
+        const [ini,fim]=sel.map(d=>iso(d));
+        refresh(ini,fim);
+      }
+    }
   });
-  const M=$("menuEmpresas");
+
+  const M = $("menuEmpresas");
   EMP_DEFAULT.forEach((emp,i)=>{
     const lbl=document.createElement("label");
     lbl.innerHTML=`<input type="radio" name="empresaSel" value="${emp}" ${i===0?"checked":""}/> ${emp}`;
-    lbl.querySelector("input").onchange=()=>{refresh();$("menuEmpresas").style.display="none"};
+    lbl.querySelector("input").onchange=()=>{refresh(hoje,hoje);$("menuEmpresas").style.display="none"};
     M.appendChild(lbl);
   });
-  $("filtroStatus").onchange=()=>refresh();
-  $("filtroMeio").onchange=()=>refresh();
+
+  $("filtroStatus").onchange=()=>refresh(hoje,hoje);
+  $("filtroMeio").onchange=()=>refresh(hoje,hoje);
+
+  // já carrega direto no dia atual
   refresh(hoje,hoje);
 })();
+
 </script>
 </body>
 </html>
