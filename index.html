@@ -9,55 +9,59 @@
 <style>
   :root{
     --bg:#0b1220;--card:#0f172a;--ink:#e5f0ff;--muted:#a8b3c7;--line:#243043;
-    --green:#16a34a;
+    --green:#16a34a;--orange:#f59e0b;
   }
   *{box-sizing:border-box}
   body{margin:0;font-family:Inter,system-ui;background:var(--bg);color:var(--ink)}
 
-  header{position:sticky;top:0;z-index:20;background:linear-gradient(180deg,#0f172a,#0b1220);
+  header{position:sticky;top:0;z-index:20;background:#0f172a;
     border-bottom:1px solid var(--line);padding:14px;display:flex;flex-direction:column;gap:10px}
   header h1{font-size:18px;margin:0;font-weight:800}
 
-  .controls{display:flex;flex-direction:column;gap:8px}
-  .row-filtros,.row-linha{display:flex;gap:8px;width:100%}
-  .row-filtros select,.row-linha input,.row-linha button{flex:1}
-
+  .row-filtros{display:flex;gap:8px;width:100%}
   select,input,button{background:#0b1528;border:1px solid #22314b;color:var(--ink);
-    padding:10px 14px;border-radius:10px;font-size:15px}
+    padding:10px 14px;border-radius:10px;font-size:14px;width:100%}
+  button{cursor:pointer;font-weight:700}
 
   .container{padding:16px;max-width:1100px;margin:0 auto}
   .lista{display:grid;gap:14px;margin-top:14px}
-  .titulo{background:linear-gradient(180deg,#101a2f,#0f172a);border:1px solid var(--line);
+  .titulo{background:#101a2f;border:1px solid var(--line);
     border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:8px;position:relative}
   .row{font-size:14px;color:var(--muted)}
   .row b{color:var(--ink)}
   .pill{padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;
-    position:absolute;top:10px;right:10px;background:#0b1528;border:1px solid #2a3955}
-  .pill.ok{border-color:#155e32;color:#b6f3c5;background:#0e2a1b}
+    position:absolute;top:10px;right:10px}
+  .pill.aprovado{background:#0e2a1b;color:#b6f3c5;border:1px solid #155e32}
+  .pill.liquidado{background:#1e1e2e;color:#9ae6b4;border:1px solid #2f855a}
 
   .actions{display:flex;gap:8px;margin-top:8px}
-  .mini{flex:1;padding:10px;border-radius:12px;border:0;font-weight:700;cursor:pointer;font-size:14px}
+  .mini{flex:1;padding:10px;border-radius:12px;border:0;font-weight:700;font-size:14px;cursor:pointer}
+  .mini.flegar{background:linear-gradient(180deg,#fbbf24,#b45309);color:#fff}
   .mini.liquidar{background:linear-gradient(180deg,#19c37d,#16a34a);color:#fff}
+
+  .footer{position:fixed;left:0;right:0;bottom:0;padding:12px;background:#0f172a;
+    border-top:1px solid var(--line);display:flex;gap:10px;z-index:50}
+  .btn-massa{flex:1;padding:14px;border-radius:12px;font-size:15px;font-weight:800;cursor:pointer;border:0}
+  .btn-massa.liquidar{background:linear-gradient(180deg,#19c37d,#16a34a);color:#fff}
 </style>
 </head>
 <body>
 <header>
   <h1>Painel Financeiro • Aprovados</h1>
-  <div class="controls">
-    <div class="row-filtros">
-      <select id="filtroMeio">
-        <option value="Todos">Todos</option>
-        <option value="Pix">Pix</option>
-        <option value="Cartão">Cartão</option>
-        <option value="Boleto">Boleto</option>
-        <option value="Outros">Outros</option>
-      </select>
-    </div>
-    <div class="row-linha">
-      <input type="text" id="filtroPeriodo" placeholder="Selecione período" />
-      <button id="btnEmpresas"><span id="empresaSelecionada">CAP DELICIA</span> ▼</button>
-      <div id="menuEmpresas" class="menu" style="display:none;position:absolute;top:100%;left:0;background:#0f172a;border:1px solid var(--line);border-radius:10px;padding:10px;z-index:50"></div>
-    </div>
+  <div class="row-filtros">
+    <select id="filtroStatus">
+      <option value="Aprovado" selected>Aprovados</option>
+      <option value="Liquidado">Liquidados</option>
+    </select>
+    <select id="filtroMeio">
+      <option value="Todos">Todos</option>
+      <option value="Pix">Pix</option>
+      <option value="Cartão">Cartão</option>
+      <option value="Boleto">Boleto</option>
+      <option value="Outros">Outros</option>
+    </select>
+    <input type="text" id="filtroPeriodo" placeholder="Período" />
+    <select id="filtroEmpresa"></select>
   </div>
 </header>
 
@@ -65,41 +69,48 @@
   <div id="lista" class="lista"></div>
 </div>
 
+<div class="footer">
+  <button id="btnMassa" class="btn-massa liquidar" style="display:none">✓ Liquidar Selecionados</button>
+</div>
+
 <script>
 const endpoint="https://script.google.com/macros/s/AKfycbzzLGp4BH0X3-mdhMqG_e07wrnUo9yFXUmJ8wdP9iVVgPxk1-tnmjsCIAEAb7r_0_yd/exec";
 const EMPRESAS=["CAP DELICIA","CAP VILLA","CAP PADARIA","CAP MERCATTO","CAP M.KIDS"];
-let TITULOS={};
+let TITULOS={},SELEC=[];
 
 const $=id=>document.getElementById(id);
 const BRL=n=>(isNaN(n)?0:n).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
 const iso = d => {const dt=new Date(d);dt.setMinutes(dt.getMinutes()-dt.getTimezoneOffset());return dt.toISOString().slice(0,10);};
 
+function toggleSel(chk,emp,linha,valor){
+  if(chk.checked)SELEC.push({emp,linha,valor});else SELEC=SELEC.filter(x=>!(x.emp===emp&&x.linha===linha));
+  $("btnMassa").style.display=SELEC.length?"block":"none";
+}
+
 function renderLista(){
-  const lista=$("lista");lista.innerHTML="";
-  let total=0;
+  const lista=$("lista");lista.innerHTML="";SELEC=[];
+  const statusFiltro=$("filtroStatus").value;
   for(const emp of Object.keys(TITULOS)){
     TITULOS[emp].forEach(t=>{
-      total++;
       const valor=Number(String(t.valor).replace("R$","").replace(/\./g,"").replace(",","."))||0;
       const card=document.createElement("div");
       card.className="titulo";
       card.innerHTML=`
-        <span class="pill ok">Aprovado</span>
+        <span class="pill ${statusFiltro.toLowerCase()}">${statusFiltro}</span>
+        <label><input type="checkbox" onchange="toggleSel(this,'${emp}',${t.linha},${valor})"> Selecionar</label>
         <div><b>${t.fornecedor}</b> • ${emp}</div>
         <div class="row">Venc: <b>${iso(t.vencimento).split("-").reverse().join("/")}</b> • Meio: <b>${t.meio_pagamento}</b></div>
         <div class="row">Valor: <b>${BRL(valor)}</b></div>
         <div class="actions">
-          <button class="mini liquidar" onclick="liquidar('${emp}',${t.linha})">✓ Liquidar</button>
+          <button class="mini flegar">⚑ Flegar</button>
+          ${statusFiltro==="Aprovado"?`<button class="mini liquidar" onclick="liquidar('${emp}',${t.linha})">✓ Liquidar</button>`:""}
         </div>`;
       lista.appendChild(card);
     });
   }
-  if(total===0){
-    lista.innerHTML="<div style='color:var(--muted);text-align:center'>Nenhum aprovado encontrado</div>";
-  }
 }
 
-async function loadTitulos(empresas,inicio,fim,filtroMeio){
+async function loadTitulos(empresas,inicio,fim,filtroStatus,filtroMeio){
   TITULOS={};
   const resps=await Promise.all(empresas.map(emp=>
     fetch(`${endpoint}?action=listar&empresa=${encodeURIComponent(emp)}`)
@@ -108,7 +119,7 @@ async function loadTitulos(empresas,inicio,fim,filtroMeio){
   resps.forEach(({emp,data})=>{
     const all=data.filter(t=>{
       const d=iso(t.vencimento);
-      return (!inicio||d>=inicio)&&(!fim||d<=fim)&&(t.status==="Aprovado");
+      return (!inicio||d>=inicio)&&(!fim||d<=fim)&&(t.status===filtroStatus);
     });
     const arr=all.filter(t=>{
       const meio=(t.meio_pagamento||"").toLowerCase();
@@ -124,35 +135,40 @@ async function loadTitulos(empresas,inicio,fim,filtroMeio){
 }
 
 async function refresh(ini,fim){
-  const empresa=document.querySelector("#menuEmpresas input:checked").value;
+  const empresa=$("filtroEmpresa").value;
   const filtroMeio=$("filtroMeio").value;
-  await loadTitulos([empresa],ini,fim,filtroMeio);
-  $("empresaSelecionada").textContent=empresa;
+  const filtroStatus=$("filtroStatus").value;
+  await loadTitulos([empresa],ini,fim,filtroStatus,filtroMeio);
   renderLista();
 }
 
 async function liquidar(emp,linha){
-  try{
-    await fetch(`${endpoint}?action=atualizar&empresa=${encodeURIComponent(emp)}&linha=${linha}&status=Liquidado`);
-    refresh(iso(new Date()),iso(new Date()));
-  }catch(e){console.error(e);}
+  await fetch(`${endpoint}?action=atualizar&empresa=${encodeURIComponent(emp)}&linha=${linha}&status=Liquidado`);
+  refresh(iso(new Date()),iso(new Date()));
 }
+
+$("btnMassa").onclick=async()=>{
+  for(const s of SELEC){
+    await fetch(`${endpoint}?action=atualizar&empresa=${encodeURIComponent(s.emp)}&linha=${s.linha}&status=Liquidado`);
+  }
+  SELEC=[];
+  $("btnMassa").style.display="none";
+  refresh(iso(new Date()),iso(new Date()));
+};
 
 (function boot(){
   const hoje=iso(new Date());
   flatpickr("#filtroPeriodo",{mode:"range",dateFormat:"Y-m-d",defaultDate:[hoje,hoje],
     onClose:sel=>{if(sel.length===2){refresh(iso(sel[0]),iso(sel[1]));}}});
-  const M=$("menuEmpresas");
-  EMPRESAS.forEach((emp,i)=>{
-    const lbl=document.createElement("label");
-    lbl.style.display="block";
-    lbl.innerHTML=`<input type="radio" name="empresaSel" value="${emp}" ${i===0?"checked":""}/> ${emp}`;
-    lbl.querySelector("input").onchange=()=>{refresh(hoje,hoje);M.style.display="none"};
-    M.appendChild(lbl);
+  EMPRESAS.forEach(emp=>{
+    const opt=document.createElement("option");
+    opt.value=emp;opt.textContent=emp;
+    $("filtroEmpresa").appendChild(opt);
   });
-  $("btnEmpresas").onclick=(e)=>{e.stopPropagation();M.style.display=M.style.display==="block"?"none":"block";};
-  document.addEventListener("click",(e)=>{if(!M.contains(e.target)&&e.target.id!=="btnEmpresas"){M.style.display="none";}});
+  $("filtroEmpresa").value=EMPRESAS[0];
+  $("filtroStatus").onchange=()=>refresh(hoje,hoje);
   $("filtroMeio").onchange=()=>refresh(hoje,hoje);
+  $("filtroEmpresa").onchange=()=>refresh(hoje,hoje);
   refresh(hoje,hoje);
 })();
 </script>
