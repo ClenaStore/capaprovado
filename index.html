@@ -86,11 +86,11 @@
     </select>
     <input type="text" id="filtroPeriodo" placeholder="Selecione período" />
     <select id="filtroEmpresa">
-      <option value="cap delicia">cap delicia</option>
-      <option value="cap villa">cap villa</option>
-      <option value="cap padaria">cap padaria</option>
-      <option value="cap mercatto">cap mercatto</option>
-      <option value="cap m.kids">cap m.kids</option>
+      <option value="cap delicia">DELÍCIA GOURMET</option>
+      <option value="cap villa">VILLA GOURMET</option>
+      <option value="cap padaria">PADARIA DELÍCIA</option>
+      <option value="cap mercatto">MERCATTO</option>
+      <option value="cap m.kids">M.KIDS</option>
     </select>
   </div>
 
@@ -113,6 +113,15 @@ const BRL=n=>(isNaN(n)?0:n).toLocaleString("pt-BR",{style:"currency",currency:"B
 const iso = d => {const dt=new Date(d);dt.setMinutes(dt.getMinutes()-dt.getTimezoneOffset());return dt.toISOString().slice(0,10);};
 
 let TITULOS=[],SELEC=[];
+
+// mapa empresa fantasia → aba
+const MAP_EMPRESAS={
+  "DELÍCIA GOURMET":"cap delicia",
+  "VILLA GOURMET":"cap villa",
+  "PADARIA DELÍCIA":"cap padaria",
+  "MERCATTO":"cap mercatto",
+  "M.KIDS":"cap m.kids"
+};
 
 // 🔹 Salvar seleção
 function salvarSelecoes(){
@@ -138,7 +147,11 @@ function renderLista(){
   const lista=$("lista");lista.innerHTML="";SELEC=[];
   TITULOS.forEach(t=>{
     const card=document.createElement("div");
-    card.className="titulo";card.dataset.linha=t.linha;card.dataset.emp=t.empresa;card.dataset.status=t.status;
+    card.className="titulo";
+    card.dataset.linha=t.linha;
+    card.dataset.emp=(t.empresa||"").toLowerCase(); // garante aba correta
+    card.dataset.status=t.status;
+
     const valor=Number(String(t.valor).replace("R$","").replace(/\./g,"").replace(",","."))||0;
     card.dataset.valor=valor;
 
@@ -148,7 +161,7 @@ function renderLista(){
         <label class="ck"><input type="checkbox" onchange="toggleSel(this)"> Selecionar</label>
         <span class="pill ${pillClass}">${st}</span>
       </div>
-      <div><b>${t.fornecedor}</b> • ${t.empresa}</div>
+      <div><b>${t.fornecedor}</b> • ${Object.keys(MAP_EMPRESAS).find(k=>MAP_EMPRESAS[k]===t.empresa) || t.empresa}</div>
       <div class="row">Venc: <b>${iso(t.vencimento).split("-").reverse().join("/")}</b> • Meio: <b>${t.meio_pagamento||"Outros"}</b></div>
       <div class="row">Valor: <b>${BRL(valor)}</b></div>
       <div class="row">Histórico: <b>${t.historico||"-"}</b></div>
@@ -165,7 +178,7 @@ function renderLista(){
 function toggleSel(chk){
   const card=chk.closest(".titulo");
   if(chk.checked){
-    if(card.dataset.status==="Aprovado"){ // só permite selecionar aprovados
+    if(card.dataset.status==="Aprovado"){
       SELEC.push(card);
     }else{
       chk.checked=false;
@@ -183,13 +196,12 @@ async function liquidar(btn){
   const emp=card.dataset.emp,linha=card.dataset.linha;
   try{
     const r=await fetch(`${endpoint}?action=atualizar&empresa=${encodeURIComponent(emp)}&linha=${linha}&status=Liquidado`);
-    const txt=await r.text();   // 🔹 pega como texto
-    if(txt.includes("ok")||txt.includes("success")){  // 🔹 aceita retorno simples
+    const txt=await r.text();
+    if(txt.includes("ok")||txt.includes("success")){
       card.querySelector(".pill").textContent="Liquidado";
       card.querySelector(".pill").className="pill liquidado";
       card.dataset.status="Liquidado";
-      btn.disabled=true;
-      btn.style.opacity="0.5";
+      btn.disabled=true;btn.style.opacity="0.5";
     }else{
       alert("Erro ao liquidar título. Resposta: "+txt);
     }
@@ -213,8 +225,7 @@ async function liquidarMassa(){
       }
     }catch(e){console.error(e);}
   }
-  SELEC=[];
-  salvarSelecoes();
+  SELEC=[];salvarSelecoes();
 }
 
 $("btnMassa").onclick=liquidarMassa;
@@ -230,10 +241,8 @@ async function refresh(){
   const data=await r.json();
   TITULOS=(data.titulos||data).filter(t=>{
     const d=iso(t.vencimento);
-    const st=t.status||""; const mp=(t.meio_pagamento||"Outros");
-    return (!status||st===status)&&
-           (meio==="Todos"||mp===meio)&&
-           (!ini||d>=ini)&&(!fim||d<=fim);
+    const st=t.status||"";const mp=(t.meio_pagamento||"Outros");
+    return (!status||st===status)&&(meio==="Todos"||mp===meio)&&(!ini||d>=ini)&&(!fim||d<=fim);
   });
   renderLista();
   atualizarResumo(data.titulos||data);
@@ -243,8 +252,7 @@ function atualizarResumo(dados){
   const counts={Aprovado:0,Pendente:0,Negado:0,Liquidado:0};
   dados.forEach(t=>{if(counts[t.status]!==undefined)counts[t.status]++;});
   const total=Object.values(counts).reduce((a,b)=>a+b,0);
-  const resumo=$("statusResumo");
-  resumo.innerHTML="";
+  const resumo=$("statusResumo");resumo.innerHTML="";
   Object.entries(counts).forEach(([status,qtd])=>{
     const perc=total?((qtd/total)*100).toFixed(1):0;
     const div=document.createElement("div");
@@ -254,31 +262,12 @@ function atualizarResumo(dados){
   });
 }
 
-// 🔹 salvar filtros
-function salvarFiltros(){
-  const filtros={
-    status:$("filtroStatus").value,
-    meio:$("filtroMeio").value,
-    periodo:$("filtroPeriodo").value,
-    empresa:$("filtroEmpresa").value
-  };
-  localStorage.setItem("filtrosFinanceiro",JSON.stringify(filtros));
-}
-function restaurarFiltros(){
-  const filtros=JSON.parse(localStorage.getItem("filtrosFinanceiro")||"{}");
-  if(filtros.status)$("filtroStatus").value=filtros.status;
-  if(filtros.meio)$("filtroMeio").value=filtros.meio;
-  if(filtros.periodo)$("filtroPeriodo").value=filtros.periodo;
-  if(filtros.empresa)$("filtroEmpresa").value=filtros.empresa;
-}
-
 (function boot(){
   const hoje=iso(new Date());
-  flatpickr("#filtroPeriodo",{mode:"range",dateFormat:"Y-m-d",defaultDate:[hoje,hoje],onClose:()=>{salvarFiltros();refresh();}});
+  flatpickr("#filtroPeriodo",{mode:"range",dateFormat:"Y-m-d",defaultDate:[hoje,hoje],onClose:refresh});
   ["filtroStatus","filtroMeio","filtroEmpresa"].forEach(id=>{
-    $(id).onchange=()=>{salvarFiltros();refresh();};
+    $(id).onchange=refresh;
   });
-  restaurarFiltros();
   refresh();
 })();
 </script>
