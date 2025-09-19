@@ -304,15 +304,17 @@ async function refresh(){
   const filtroMeio=$("filtroMeio").value;
   const empresa=document.querySelector("#menuEmpresas input:checked").value;
   const periodo=$("filtroPeriodo").value;
-  const inicio=periodo?periodo:"";
-  const fim=periodo?periodo:"";
+  const inicio=periodo || "";
+  const fim=periodo || "";
   await loadTitulos([empresa],inicio,fim,filtro,filtroMeio);
   $("empresaSelecionada").textContent=empresa;
   renderLista();hideOverlay();
 }
 (function boot(){
-  $("filtroPeriodo").value=""; // inicia sem filtro de data
-  const M=$("menuEmpresas");EMP_DEFAULT.forEach((emp,i)=>{
+  // inicia já com a data de hoje
+  $("filtroPeriodo").value=new Date().toISOString().slice(0,10);
+  const M=$("menuEmpresas");
+  EMP_DEFAULT.forEach((emp,i)=>{
     const lbl=document.createElement("label");
     lbl.innerHTML=`<input type="radio" name="empresaSel" value="${emp}" ${i===0?"checked":""}/> ${emp}`;
     lbl.querySelector("input").onchange=()=>{refresh();$("menuEmpresas").style.display="none"};
