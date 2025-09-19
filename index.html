@@ -250,8 +250,8 @@ function renderLista(){
         <span class="pill" data-status>${st}</span>
         <div class="actions">
           <button class="mini obs" onclick="abrirObs('${id}','${emp}',${t.linha},\`${obs}\`)"><span>✏️ Obs</span><div class="spinner-btn"></div></button>
-          <button class="mini aprovar" onclick="acaoStatus(this,'Aprovado')"><span>✓ Aprovar</span><div class="spinner-btn"></div></button>
           <button class="mini negar" onclick="acaoStatus(this,'Negado')"><span>✗ Negar</span><div class="spinner-btn"></div></button>
+          <button class="mini aprovar" onclick="acaoStatus(this,'Aprovado')"><span>✓ Aprovar</span><div class="spinner-btn"></div></button>
         </div>`;
       setPill(card.querySelector("[data-status]"),st);
       lista.appendChild(card);
