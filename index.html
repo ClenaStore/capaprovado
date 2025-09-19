@@ -139,6 +139,7 @@ const ID=(emp,idx)=>`${emp.replace(/\s+/g,'_')}__${idx}`;
 function showOverlay(){$("overlay").style.display="flex"}
 function hideOverlay(){$("overlay").style.display="none"}
 
+/* Carregar títulos */
 async function loadTitulos(empresas,inicio,fim,filtroStatus,filtroMeio){
   TITULOS={};
   const resps=await Promise.all(empresas.map(emp=>
@@ -161,6 +162,7 @@ async function loadTitulos(empresas,inicio,fim,filtroStatus,filtroMeio){
   });
 }
 
+/* Renderizar lista */
 function renderLista(){
   const lista=$("lista");lista.innerHTML="";SELEC=[];$("master").checked=false;
   let totalItens=0,somaModal={};
@@ -206,6 +208,7 @@ function setPill(el,status){
   else el.textContent=status;
 }
 
+/* Modalidades */
 function renderModalidades(sum){
   const mods=$("mods");mods.innerHTML="";
   let grupos={Cartão:0,Boleto:0,Pix:0},total=0;
@@ -241,16 +244,7 @@ function renderSelecionados(){
   if(SELEC.length){$("bubble").style.display="block";$("btnMassa").style.display="block";$("bubble").textContent="Total selecionado: "+BRL(total)}
   else{$("bubble").style.display="none";$("btnMassa").style.display="none"}}
 
-/* Aprovar/Negar */
-async function acaoStatus(btn,novo){
-  const card=btn.closest(".titulo");
-  const emp=card.dataset.emp,idx=card.dataset.idx;
-  btn.classList.add("loading");
-  setPill(card.querySelector("[data-status]"),novo);
-  try{await fetch(`${endpointTitulos}?action=atualizar&empresa=${encodeURIComponent(emp)}&index=${idx}&status=${encodeURIComponent(novo)}`)}catch(e){console.error(e)}
-  btn.classList.remove("loading");
-}
-// Atualiza um card + GAS
+/* Aprovar/Negar individual */
 async function acaoStatus(btn,novo){
   const card=btn.closest(".titulo");
   const emp=card.dataset.emp,idx=card.dataset.idx;
@@ -262,31 +256,22 @@ async function acaoStatus(btn,novo){
   btn.classList.remove("loading");
 }
 
-// Atualização em massa
+/* Aprovar em massa */
 async function atualizarStatusMassa(novo="Aprovado"){
   for(const s of SELEC){
     const card=document.querySelector(`.titulo[data-id="${s.id}"]`);
     if(!card) continue;
-
-    // atualiza pill local
     setPill(card.querySelector("[data-status]"),novo);
-
-    // chama GAS direto
     try{
       await fetch(`${endpointTitulos}?action=atualizar&empresa=${encodeURIComponent(s.emp)}&index=${s.idx}&status=${encodeURIComponent(novo)}`);
     }catch(e){console.error(e)}
-
-    // desmarca checkbox
     card.querySelector(".ck input").checked=false;
   }
   SELEC=[];
   $("master").checked=false;
   renderSelecionados();
 }
-
-// botão de massa chama essa nova
 $("btnMassa").onclick=()=>atualizarStatusMassa("Aprovado");
-
 
 /* Observação */
 function abrirObs(id,emp,idx,txt){
@@ -312,7 +297,7 @@ async function refresh(){
   const filtro=$("filtroStatus").value;
   const filtroMeio=$("filtroMeio").value;
   const empresa=document.querySelector("#menuEmpresas input:checked").value;
-  const periodo=$("filtroPeriodo").value || "2025-09-18"; // força dia 18
+  const periodo=$("filtroPeriodo").value || "2025-09-18"; // fixa 18/09
   const inicio=periodo,fim=periodo;
   await loadTitulos([empresa],inicio,fim,filtro,filtroMeio);
   $("empresaSelecionada").textContent=empresa;
