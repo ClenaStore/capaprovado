@@ -9,7 +9,7 @@
 <style>
   :root{
     --bg:#0b1220;--card:#0f172a;--ink:#e5f0ff;--muted:#a8b3c7;--line:#243043;
-    --green:#16a34a;--orange:#f59e0b;
+    --green:#16a34a;
   }
   *{box-sizing:border-box}
   body{margin:0;font-family:Inter,system-ui;background:var(--bg);color:var(--ink)}
@@ -19,25 +19,27 @@
   header h1{font-size:18px;margin:0;font-weight:800}
 
   .row-filtros{display:flex;gap:8px;width:100%}
-  select,input,button{background:#0b1528;border:1px solid #22314b;color:var(--ink);
+  select,input{background:#0b1528;border:1px solid #22314b;color:var(--ink);
     padding:10px 14px;border-radius:10px;font-size:14px;width:100%}
-  button{cursor:pointer;font-weight:700}
 
   .container{padding:16px;max-width:1100px;margin:0 auto}
   .lista{display:grid;gap:14px;margin-top:14px}
   .titulo{background:#101a2f;border:1px solid var(--line);
-    border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:8px;position:relative}
-  .row{font-size:14px;color:var(--muted)}
-  .row b{color:var(--ink)}
-  .pill{padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;
-    position:absolute;top:10px;right:10px}
+    border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px;position:relative}
+
+  .topo{display:flex;justify-content:space-between;align-items:center}
+  .topo label{font-size:13px;display:flex;align-items:center;gap:6px;color:var(--muted)}
+  .pill{padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700}
   .pill.aprovado{background:#0e2a1b;color:#b6f3c5;border:1px solid #155e32}
   .pill.liquidado{background:#1e1e2e;color:#9ae6b4;border:1px solid #2f855a}
 
-  .actions{display:flex;gap:8px;margin-top:8px}
-  .mini{flex:1;padding:10px;border-radius:12px;border:0;font-weight:700;font-size:14px;cursor:pointer}
-  .mini.flegar{background:linear-gradient(180deg,#fbbf24,#b45309);color:#fff}
-  .mini.liquidar{background:linear-gradient(180deg,#19c37d,#16a34a);color:#fff}
+  .row{font-size:14px;color:var(--muted)}
+  .row b{color:var(--ink)}
+
+  .btn-card{width:100%;padding:10px;border-radius:10px;
+    background:linear-gradient(180deg,#19c37d,#16a34a);color:#fff;
+    font-weight:700;font-size:14px;cursor:pointer;border:0;margin-top:8px}
+  .btn-card:hover{opacity:.9}
 
   .footer{position:fixed;left:0;right:0;bottom:0;padding:12px;background:#0f172a;
     border-top:1px solid var(--line);display:flex;gap:10px;z-index:50}
@@ -96,15 +98,15 @@ function renderLista(){
       const card=document.createElement("div");
       card.className="titulo";
       card.innerHTML=`
-        <span class="pill ${statusFiltro.toLowerCase()}">${statusFiltro}</span>
-        <label><input type="checkbox" onchange="toggleSel(this,'${emp}',${t.linha},${valor})"> Selecionar</label>
+        <div class="topo">
+          <label><input type="checkbox" onchange="toggleSel(this,'${emp}',${t.linha},${valor})"> Selecionar</label>
+          <span class="pill ${statusFiltro.toLowerCase()}">${statusFiltro}</span>
+        </div>
         <div><b>${t.fornecedor}</b> • ${emp}</div>
         <div class="row">Venc: <b>${iso(t.vencimento).split("-").reverse().join("/")}</b> • Meio: <b>${t.meio_pagamento}</b></div>
         <div class="row">Valor: <b>${BRL(valor)}</b></div>
-        <div class="actions">
-          <button class="mini flegar">⚑ Flegar</button>
-          ${statusFiltro==="Aprovado"?`<button class="mini liquidar" onclick="liquidar('${emp}',${t.linha})">✓ Liquidar</button>`:""}
-        </div>`;
+        ${statusFiltro==="Aprovado"?`<button class="btn-card" onclick="liquidar('${emp}',${t.linha})">✓ Liquidar</button>`:""}
+      `;
       lista.appendChild(card);
     });
   }
