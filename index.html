@@ -21,7 +21,6 @@
   .controls{width:100%;display:flex;flex-direction:column;gap:8px}
   .row-filtros{display:flex;gap:8px;width:100%}
   .row-filtros select{flex:1}
-
   .row-linha{display:flex;gap:8px;width:100%}
   .row-linha input{flex:1}
 
@@ -108,7 +107,6 @@
         <option value="Outros">Outros</option>
       </select>
     </div>
-
     <div class="row-linha">
       <input type="text" id="filtroPeriodo" placeholder="Selecione período" />
       <div style="position:relative;flex:1">
@@ -170,15 +168,22 @@ const ID=(emp,linha)=>`${emp.replace(/\s+/g,'_')}__${linha}`;
 
 function setLoading(btn,on=true){if(on)btn.classList.add("loading");else btn.classList.remove("loading");}
 
+// normaliza meios
+function normalizeMeio(meio){
+  meio = (meio||"Outros").toLowerCase();
+  if(meio.includes("pix")) return "Pix";
+  if(meio.includes("cart")) return "Cartão";
+  if(meio.includes("bol")) return "Boleto";
+  return "Outros";
+}
+
 // histórico local
 function addHistLocal(id,texto){
   let hist=JSON.parse(localStorage.getItem("hist_"+id)||"[]");
   hist.push({data:new Date().toLocaleString("pt-BR"),texto});
   localStorage.setItem("hist_"+id,JSON.stringify(hist));
 }
-function getHistLocal(id){
-  return JSON.parse(localStorage.getItem("hist_"+id)||"[]");
-}
+function getHistLocal(id){return JSON.parse(localStorage.getItem("hist_"+id)||"[]");}
 
 async function abrirHistorico(id,emp,linha){
   $("histContent").innerHTML="<i>Carregando...</i>";
@@ -206,10 +211,9 @@ function renderMods(){
   for(const emp of Object.keys(TITULOS)){
     (TITULOS[emp]||[]).forEach(t=>{
       const valor=Number(String(t.valor).replace("R$","").replace(/\./g,"").replace(",","."))||0;
-      const meio=(t.meio_pagamento||"Outros");
+      const meio=normalizeMeio(t.meio_pagamento);
       soma.Total+=valor;
-      if(soma[meio]!==undefined) soma[meio]+=valor;
-      else soma.Outros+=valor;
+      soma[meio]+=valor;
     });
   }
   const card=(cls,label,val)=>`<div class="mod ${cls}"><span>${label}</span><b>${BRL(val)}</b></div>`;
@@ -231,7 +235,6 @@ function renderLista(){
       const obs=(t.observacao || "");
       const histColuna=(t.historico || "");
       const histLocal=getHistLocal(id);
-
       const card=document.createElement("div");
       card.className="titulo";card.dataset.id=id;card.dataset.emp=emp;card.dataset.linha=t.linha;card.dataset.valor=valor;
       card.innerHTML=`
@@ -285,6 +288,25 @@ async function acaoStatus(btn,novo){
   setLoading(btn,false);
 }
 
+async function atualizarStatusMassa(novo="Aprovado"){
+  const btn=$("btnMassa");
+  setLoading(btn,true);
+  for(const s of SELEC){
+    const card=document.querySelector(`.titulo[data-id="${s.id}"]`);
+    if(!card) continue;
+    setPill(card.querySelector("[data-status]"),novo);
+    addHistLocal(s.id,"Status alterado para "+novo);
+    try{
+      await fetch(`${endpointTitulos}?action=atualizar&empresa=${encodeURIComponent(s.emp)}&linha=${s.linha}&status=${encodeURIComponent(novo)}`);
+    }catch(e){console.error(e)}
+    card.querySelector(".ck input").checked=false;
+  }
+  SELEC=[];$("master").checked=false;
+  $("bubble").style.display="none";$("btnMassa").style.display="none";
+  setLoading(btn,false);
+}
+$("btnMassa").onclick=()=>atualizarStatusMassa("Aprovado");
+
 function abrirObs(id,emp,linha,txt){
   obsContext={id,emp,linha};
   $("textoObs").value=txt||"";$("modalObs").style.display="flex";
@@ -312,9 +334,9 @@ async function loadTitulos(empresas,inicio,fim,filtroStatus,filtroMeio){
     const all=data.filter(t=>{const d=iso(t.vencimento);return (!inicio||d>=inicio)&&(!fim||d<=fim);});
     const arr=all.filter(t=>{
       let st=(t.status||"Pendente");
-      const meio=(t.meio_pagamento||"Outros");
+      const meio=normalizeMeio(t.meio_pagamento);
       const statusOk=filtroStatus==="Todos"?true:(st===filtroStatus);
-      const meioOk=filtroMeio==="Todos"?true:(meio.toLowerCase().includes(filtroMeio.toLowerCase()));
+      const meioOk=filtroMeio==="Todos"?true:(meio===filtroMeio);
       return statusOk&&meioOk;
     });
     TITULOS[emp]=arr;
