@@ -147,7 +147,12 @@ let TITULOS={},SELEC=[],obsContext={};
 
 const $=id=>document.getElementById(id);
 const BRL=n=>(isNaN(n)?0:n).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
-const iso=d=>new Date(d).toISOString().slice(0,10);
+const iso = d => {
+  const dt = new Date(d);
+  dt.setMinutes(dt.getMinutes() - dt.getTimezoneOffset()); 
+  return dt.toISOString().slice(0,10);
+};
+
 const ID=(emp,linha)=>`${emp.replace(/\s+/g,'_')}__${linha}`;
 
 function showOverlay(){$("overlay").style.display="flex"}
