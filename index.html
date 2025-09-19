@@ -186,7 +186,7 @@ function renderLista(){
           <div class="row">Venc: <b>${iso(t.vencimento).split("-").reverse().join("/")}</b> • Meio: <b>${meio}</b></div>
           <div class="row">Valor: <b>${BRL(valor)}</b> <span class="pill" data-status>${st}</span></div>
           ${hist ? `<div class="row" style="color:#facc15">Histórico: ${hist}</div>` : ""}
-          ${obs ? `<div class="row" style="color:#60a5fa">Obs: ${obs}</div>` : ""}
+          ${obs ? `<div class="row obs" style="color:#60a5fa">Obs: ${obs}</div>` : ""}
         </div>
         <div class="actions">
           <button class="mini obs" onclick="abrirObs('${id}','${emp}',${idx},\`${obs}\`)">✏️</button>
@@ -280,14 +280,33 @@ function abrirObs(id,emp,idx,txt){
   $("modalObs").style.display="flex";
 }
 function fecharObs(){$("modalObs").style.display="none"}
+
 async function salvarObs(){
   const {emp,idx}=obsContext;
   const texto=$("textoObs").value.trim();
   if(!texto)return;
-  try{
-    await fetch(`${endpointTitulos}?action=atualizarObservacao&empresa=${encodeURIComponent(emp)}&index=${idx}&coluna=AI&texto=${encodeURIComponent(texto)}`);
-    alert("Observação salva!");
+
+  showOverlay();
+  try {
+    const r = await fetch(`${endpointTitulos}?action=atualizarObservacao&empresa=${encodeURIComponent(emp)}&index=${idx}&texto=${encodeURIComponent(texto)}`);
+    const resp = await r.json();
+    if(resp.sucesso){
+      alert("Observação salva!");
+      const card=document.querySelector(`.titulo[data-emp="${emp}"][data-idx="${idx}"]`);
+      if(card){
+        let rowObs = card.querySelector(".row.obs");
+        if(!rowObs){
+          rowObs=document.createElement("div");
+          rowObs.className="row obs";
+          card.querySelector(".info").appendChild(rowObs);
+        }
+        rowObs.textContent="Obs: "+texto;
+      }
+    }else{
+      alert("Erro: "+(resp.erro||"Falha ao salvar"));
+    }
   }catch(e){console.error(e)}
+  hideOverlay();
   fecharObs();
 }
 
@@ -297,14 +316,14 @@ async function refresh(){
   const filtro=$("filtroStatus").value;
   const filtroMeio=$("filtroMeio").value;
   const empresa=document.querySelector("#menuEmpresas input:checked").value;
-  const periodo=$("filtroPeriodo").value || "2025-09-18"; // fixa 18/09
+  const periodo=$("filtroPeriodo").value || "2025-09-18";
   const inicio=periodo,fim=periodo;
   await loadTitulos([empresa],inicio,fim,filtro,filtroMeio);
   $("empresaSelecionada").textContent=empresa;
   renderLista();hideOverlay();
 }
 (function boot(){
-  const hoje="2025-09-18"; // fixa 18/09/2025
+  const hoje="2025-09-18";
   $("filtroPeriodo").value=hoje;
   const M=$("menuEmpresas");EMP_DEFAULT.forEach((emp,i)=>{
     const lbl=document.createElement("label");
