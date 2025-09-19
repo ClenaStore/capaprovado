@@ -127,14 +127,14 @@
 </div>
 
 <script>
-const endpointTitulos="https://script.google.com/macros/s/AKfycbxCVF0Uvrv-XCw53qtwpvzunVn5olKBqgtEr4KdVWwBXCse1b_01k7KzZRft1km57j9/exec";
+const endpointTitulos="https://script.google.com/macros/s/AKfycbzzLGp4BH0X3-mdhMqG_e07wrnUo9yFXUmJ8wdP9iVVgPxk1-tnmjsCIAEAb7r_0_yd/exec";
 const EMP_DEFAULT=["CAP DELICIA","CAP VILLA","CAP PADARIA","CAP MERCATTO","CAP M.KIDS"];
 let TITULOS={},SELEC=[],obsContext={};
 
 const $=id=>document.getElementById(id);
 const BRL=n=>(isNaN(n)?0:n).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
 const iso=d=>new Date(d).toISOString().slice(0,10);
-const ID=(emp,idx)=>`${emp.replace(/\s+/g,'_')}__${idx}`;
+const ID=(emp,linha)=>`${emp.replace(/\s+/g,'_')}__${linha}`;
 
 function showOverlay(){$("overlay").style.display="flex"}
 function hideOverlay(){$("overlay").style.display="none"}
@@ -152,7 +152,7 @@ async function loadTitulos(empresas,inicio,fim,filtroStatus,filtroMeio){
       return (!inicio || d>=inicio) && (!fim || d<=fim);
     });
     const arr=all.filter(t=>{
-      let st=(t.aprovada || t.status || "Pendente");
+      let st=(t.status || "Pendente");
       const meio=(t.meio_pagamento||"Outros");
       const statusOk=filtroStatus==="Todos"?true:(st===filtroStatus);
       const meioOk=filtroMeio==="Todos"?true:(meio.toLowerCase().includes(filtroMeio.toLowerCase()));
@@ -168,17 +168,17 @@ function renderLista(){
   let totalItens=0,somaModal={};
   for(const emp of Object.keys(TITULOS)){
     const arr=TITULOS[emp]||[];
-    arr.forEach((t,idx)=>{
+    arr.forEach((t)=>{
       totalItens++;
       const valor=Number(String(t.valor).replace("R$","").replace(/\./g,"").replace(",","."))||0;
       const meio=t.meio_pagamento||"Outros";
       somaModal[meio]=(somaModal[meio]||0)+valor;
-      const id=ID(emp,idx);
-      const st=(t.aprovada || t.status || "Pendente");
+      const id=ID(emp,t.linha);
+      const st=(t.status || "Pendente");
       const hist=(t.historico || "");
       const obs=(t.observacao || "");
       const card=document.createElement("div");
-      card.className="titulo";card.dataset.id=id;card.dataset.emp=emp;card.dataset.idx=idx;card.dataset.valor=valor;
+      card.className="titulo";card.dataset.id=id;card.dataset.emp=emp;card.dataset.linha=t.linha;card.dataset.valor=valor;
       card.innerHTML=`
         <div class="ck"><input type="checkbox" onchange="toggleSel(this)" /></div>
         <div class="info">
@@ -189,7 +189,7 @@ function renderLista(){
           ${obs ? `<div class="row obs" style="color:#60a5fa">Obs: ${obs}</div>` : ""}
         </div>
         <div class="actions">
-          <button class="mini obs" onclick="abrirObs('${id}','${emp}',${idx},\`${obs}\`)">✏️</button>
+          <button class="mini obs" onclick="abrirObs('${id}','${emp}',${t.linha},\`${obs}\`)">✏️</button>
           <button class="mini aprovar" onclick="acaoStatus(this,'Aprovado')">✓</button>
           <button class="mini negar" onclick="acaoStatus(this,'Negado')">✗</button>
         </div>`;
@@ -235,8 +235,8 @@ function renderModalidades(sum){
 $("master").onchange=()=>{document.querySelectorAll("#lista .ck input").forEach(cb=>{cb.checked=$("master").checked;cb.dispatchEvent(new Event("change"))})};
 function toggleSel(chk){
   const card=chk.closest(".titulo");
-  const id=card.dataset.id,emp=card.dataset.emp,idx=Number(card.dataset.idx),valor=Number(card.dataset.valor)||0;
-  if(chk.checked)SELEC.push({id,emp,idx,valor}); else SELEC=SELEC.filter(x=>x.id!==id);
+  const id=card.dataset.id,emp=card.dataset.emp,linha=Number(card.dataset.linha),valor=Number(card.dataset.valor)||0;
+  if(chk.checked)SELEC.push({id,emp,linha,valor}); else SELEC=SELEC.filter(x=>x.id!==id);
   renderSelecionados();
 }
 function renderSelecionados(){
@@ -247,11 +247,11 @@ function renderSelecionados(){
 /* Aprovar/Negar individual */
 async function acaoStatus(btn,novo){
   const card=btn.closest(".titulo");
-  const emp=card.dataset.emp,idx=card.dataset.idx;
+  const emp=card.dataset.emp,linha=card.dataset.linha;
   btn.classList.add("loading");
   setPill(card.querySelector("[data-status]"),novo);
   try{
-    await fetch(`${endpointTitulos}?action=atualizar&empresa=${encodeURIComponent(emp)}&index=${idx}&status=${encodeURIComponent(novo)}`);
+    await fetch(`${endpointTitulos}?action=atualizar&empresa=${encodeURIComponent(emp)}&linha=${linha}&status=${encodeURIComponent(novo)}`);
   }catch(e){console.error(e)}
   btn.classList.remove("loading");
 }
@@ -263,7 +263,7 @@ async function atualizarStatusMassa(novo="Aprovado"){
     if(!card) continue;
     setPill(card.querySelector("[data-status]"),novo);
     try{
-      await fetch(`${endpointTitulos}?action=atualizar&empresa=${encodeURIComponent(s.emp)}&index=${s.idx}&status=${encodeURIComponent(novo)}`);
+      await fetch(`${endpointTitulos}?action=atualizar&empresa=${encodeURIComponent(s.emp)}&linha=${s.linha}&status=${encodeURIComponent(novo)}`);
     }catch(e){console.error(e)}
     card.querySelector(".ck input").checked=false;
   }
@@ -274,25 +274,24 @@ async function atualizarStatusMassa(novo="Aprovado"){
 $("btnMassa").onclick=()=>atualizarStatusMassa("Aprovado");
 
 /* Observação */
-function abrirObs(id,emp,idx,txt){
-  obsContext={id,emp,idx};
+function abrirObs(id,emp,linha,txt){
+  obsContext={id,emp,linha};
   $("textoObs").value=txt||"";
   $("modalObs").style.display="flex";
 }
 function fecharObs(){$("modalObs").style.display="none"}
 
 async function salvarObs(){
-  const {emp,idx}=obsContext;
+  const {emp,linha}=obsContext;
   const texto=$("textoObs").value.trim();
   if(!texto)return;
 
   showOverlay();
   try {
-    const r = await fetch(`${endpointTitulos}?action=atualizarObservacao&empresa=${encodeURIComponent(emp)}&index=${idx}&texto=${encodeURIComponent(texto)}`);
+    const r = await fetch(`${endpointTitulos}?action=atualizarObservacao&empresa=${encodeURIComponent(emp)}&linha=${linha}&texto=${encodeURIComponent(texto)}`);
     const resp = await r.json();
     if(resp.sucesso){
-      alert("Observação salva!");
-      const card=document.querySelector(`.titulo[data-emp="${emp}"][data-idx="${idx}"]`);
+      const card=document.querySelector(`.titulo[data-emp="${emp}"][data-linha="${linha}"]`);
       if(card){
         let rowObs = card.querySelector(".row.obs");
         if(!rowObs){
