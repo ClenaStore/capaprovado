@@ -91,7 +91,7 @@
       <option value="Outros">Outros</option>
     </select>
 
-    <input type="date" id="filtroPeriodo" multiple />
+    <input type="date" id="filtroPeriodo" />
     <button class="btn icon" id="btnEmpresas">Empresa: <span id="empresaSelecionada">CAP DELICIA</span> ▼</button>
   </div>
 </header>
@@ -161,7 +161,7 @@ async function loadTitulos(empresas,inicio,fim,filtroStatus,filtroMeio){
   resps.forEach(({emp,data})=>{
     const all=data.filter(t=>{
       const d=iso(t.vencimento);
-      return (!inicio||d>=inicio)&&(!fim||d<=fim);
+      return (!inicio || d>=inicio) && (!fim || d<=fim);
     });
     const arr=all.filter(t=>{
       let st=(t.status==="Sim"?"Pendente":t.status);
@@ -250,7 +250,7 @@ function renderSelecionados(){
   const total=SELEC.reduce((s,x)=>s+x.valor,0);
   if(SELEC.length){$("bubble").style.display="block";$("btnMassa").style.display="block";$("bubble").textContent="Total selecionado: "+BRL(total)}
   else{$("bubble").style.display="none";$("btnMassa").style.display="none"}}
-  
+
 /* Aprovar/Negar */
 async function acaoStatus(btn,novo){
   const card=btn.closest(".titulo");
@@ -303,15 +303,15 @@ async function refresh(){
   const filtro=$("filtroStatus").value;
   const filtroMeio=$("filtroMeio").value;
   const empresa=document.querySelector("#menuEmpresas input:checked").value;
-  const periodo=$("filtroPeriodo").value.split(",");
-  const inicio=periodo[0]||"",fim=periodo[1]||periodo[0]||"";
+  const periodo=$("filtroPeriodo").value;
+  const inicio=periodo?periodo:"";
+  const fim=periodo?periodo:"";
   await loadTitulos([empresa],inicio,fim,filtro,filtroMeio);
   $("empresaSelecionada").textContent=empresa;
   renderLista();hideOverlay();
 }
 (function boot(){
-  const hoje=new Date().toISOString().slice(0,10);
-  $("filtroPeriodo").value=hoje;
+  $("filtroPeriodo").value=""; // inicia sem filtro de data
   const M=$("menuEmpresas");EMP_DEFAULT.forEach((emp,i)=>{
     const lbl=document.createElement("label");
     lbl.innerHTML=`<input type="radio" name="empresaSel" value="${emp}" ${i===0?"checked":""}/> ${emp}`;
