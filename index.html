@@ -32,6 +32,14 @@
   @keyframes spin{to{transform:rotate(360deg)}}
 
   .container{padding:16px;max-width:1250px;margin:0 auto}
+.row-linha {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+.row-linha input {
+  flex: 1;
+}
 
   .mods-card{margin:16px 0;background:#0f172a;border:1px solid var(--line);border-radius:18px;padding:16px}
   .mods{display:grid;grid-template-columns:1fr;gap:12px}
@@ -101,13 +109,20 @@
         <option value="Outros">Outros</option>
       </select>
     </div>
-    <input type="text" id="filtroPeriodo" placeholder="Selecione período" />
-    <div style="position:relative">
-      <button class="btn icon" id="btnEmpresas">Empresa: <span id="empresaSelecionada">CAP DELICIA</span> ▼</button>
-      <div id="menuEmpresas" class="menu"></div>
+
+    <!-- NOVA LINHA: Período + Empresas juntos -->
+    <div class="row-linha">
+      <input type="text" id="filtroPeriodo" placeholder="Selecione período" />
+      <div style="position:relative;flex:1">
+        <button class="btn icon" id="btnEmpresas">Empresa: 
+          <span id="empresaSelecionada">CAP DELICIA</span> ▼
+        </button>
+        <div id="menuEmpresas" class="menu"></div>
+      </div>
     </div>
   </div>
 </header>
+
 
 <div id="overlay"><div class="spinner"></div></div>
 
