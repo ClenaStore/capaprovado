@@ -9,44 +9,43 @@
 <style>
   :root{
     --bg:#0b1220;--card:#0f172a;--ink:#e5f0ff;--muted:#a8b3c7;--line:#243043;
-    --green:#16a34a;
+    --green:#16a34a;--red:#ef4444;--amber:#f59e0b;
   }
   *{box-sizing:border-box}
-  body{margin:0;font-family:Inter,system-ui;background:var(--bg);color:var(--ink)}
+  body{margin:0;font-family:Inter,system-ui;background:var(--bg);color:var(--ink);font-size:15px}
 
-  header{position:sticky;top:0;z-index:20;background:#0f172a;
-    border-bottom:1px solid var(--line);padding:14px;display:flex;flex-direction:column;gap:10px}
-  header h1{font-size:18px;margin:0;font-weight:800}
+  header{position:sticky;top:0;z-index:20;background:linear-gradient(180deg,#0f172a,#0b1220);
+    border-bottom:1px solid var(--line);padding:14px}
+  header h1{font-size:18px;margin:0 0 12px 0;font-weight:800}
 
   .row-filtros{display:flex;gap:8px;width:100%}
   select,input{background:#0b1528;border:1px solid #22314b;color:var(--ink);
-    padding:10px 14px;border-radius:10px;font-size:14px;width:100%}
+    padding:10px 14px;border-radius:10px;font-size:15px;width:100%}
 
-  .container{padding:16px;max-width:1100px;margin:0 auto}
-  .lista{display:grid;gap:12px;margin-top:14px}
-  .titulo{background:#101a2f;border:1px solid var(--line);
-    border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:6px}
+  .container{padding:16px;max-width:100%;margin:0 auto}
+  .lista{display:flex;flex-direction:column;gap:12px;align-items:center}
 
-  .topo{display:flex;justify-content:space-between;align-items:center}
-  .topo label{font-size:13px;display:flex;align-items:center;gap:6px;color:var(--muted)}
-  .pill{padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700}
-  .pill.aprovado{background:#0e2a1b;color:#b6f3c5;border:1px solid #155e32}
-  .pill.liquidado{background:#1e1e2e;color:#9ae6b4;border:1px solid #2f855a}
+  .titulo{width:95%;max-width:900px;background:#101a2f;border:1px solid var(--line);
+    border-radius:10px;padding:10px 14px;display:flex;flex-direction:column;gap:6px;position:relative}
 
-  .conteudo{display:flex;justify-content:space-between;align-items:center;gap:10px}
-  .info{display:flex;flex-direction:column;gap:4px;font-size:14px;flex:1}
-  .info b{color:var(--ink)}
-  .row{color:var(--muted)}
+  .topo{display:flex;align-items:center;justify-content:space-between}
+  .ck{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:13px}
+  .ck input{width:18px;height:18px}
 
-  .btn-card{padding:8px 14px;border-radius:8px;
-    background:linear-gradient(180deg,#19c37d,#16a34a);color:#fff;
-    font-weight:700;font-size:14px;cursor:pointer;border:0;white-space:nowrap}
-  .btn-card:hover{opacity:.9}
+  .row{display:flex;gap:10px;flex-wrap:wrap;font-size:14px;color:var(--muted)}
+  .row b{color:var(--ink);font-size:15px}
 
-  .footer{position:fixed;left:0;right:0;bottom:0;padding:12px;background:#0f172a;
-    border-top:1px solid var(--line);display:flex;gap:10px;z-index:50}
-  .btn-massa{flex:1;padding:14px;border-radius:12px;font-size:15px;font-weight:800;cursor:pointer;border:0}
-  .btn-massa.liquidar{background:linear-gradient(180deg,#19c37d,#16a34a);color:#fff}
+  .pill{padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;
+    background:#0e2a1b;color:#b6f3c5;border:1px solid #155e32}
+
+  .acoes{display:flex;justify-content:flex-end;margin-top:6px}
+  .btn{padding:8px 14px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;border:0}
+  .liquidar{background:linear-gradient(180deg,#19c37d,#16a34a);color:#fff}
+
+  .footer{position:fixed;left:0;right:0;bottom:0;padding:12px;background:#0f172a;border-top:1px solid var(--line);
+    display:flex;justify-content:flex-end}
+  .btn-massa{background:linear-gradient(180deg,#19c37d,#16a34a);color:#fff;border:0;border-radius:8px;
+    padding:12px 18px;font-weight:800;cursor:pointer;font-size:15px}
 </style>
 </head>
 <body>
@@ -58,14 +57,20 @@
       <option value="Liquidado">Liquidados</option>
     </select>
     <select id="filtroMeio">
-      <option value="Todos">Todos</option>
+      <option value="Todos" selected>Todos</option>
       <option value="Pix">Pix</option>
       <option value="Cartão">Cartão</option>
       <option value="Boleto">Boleto</option>
       <option value="Outros">Outros</option>
     </select>
-    <input type="text" id="filtroPeriodo" placeholder="Período" />
-    <select id="filtroEmpresa"></select>
+    <input type="text" id="filtroPeriodo" placeholder="Selecione período" />
+    <select id="filtroEmpresa">
+      <option>CAP DELICIA</option>
+      <option>CAP VILLA</option>
+      <option>CAP PADARIA</option>
+      <option>CAP MERCATTO</option>
+      <option>CAP M.KIDS</option>
+    </select>
   </div>
 </header>
 
@@ -74,110 +79,92 @@
 </div>
 
 <div class="footer">
-  <button id="btnMassa" class="btn-massa liquidar" style="display:none">✓ Liquidar Selecionados</button>
+  <button id="btnMassa" class="btn-massa">✓ Liquidar Selecionados</button>
 </div>
 
 <script>
 const endpoint="https://script.google.com/macros/s/AKfycbzzLGp4BH0X3-mdhMqG_e07wrnUo9yFXUmJ8wdP9iVVgPxk1-tnmjsCIAEAb7r_0_yd/exec";
-const EMPRESAS=["CAP DELICIA","CAP VILLA","CAP PADARIA","CAP MERCATTO","CAP M.KIDS"];
-let TITULOS={},SELEC=[];
-
 const $=id=>document.getElementById(id);
 const BRL=n=>(isNaN(n)?0:n).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
 const iso = d => {const dt=new Date(d);dt.setMinutes(dt.getMinutes()-dt.getTimezoneOffset());return dt.toISOString().slice(0,10);};
 
-function toggleSel(chk,emp,linha,valor){
-  if(chk.checked)SELEC.push({emp,linha,valor});else SELEC=SELEC.filter(x=>!(x.emp===emp&&x.linha===linha));
-  $("btnMassa").style.display=SELEC.length?"block":"none";
-}
+let TITULOS=[],SELEC=[];
 
 function renderLista(){
   const lista=$("lista");lista.innerHTML="";SELEC=[];
-  const statusFiltro=$("filtroStatus").value;
-  for(const emp of Object.keys(TITULOS)){
-    TITULOS[emp].forEach(t=>{
-      const valor=Number(String(t.valor).replace("R$","").replace(/\./g,"").replace(",","."))||0;
-      const card=document.createElement("div");
-      card.className="titulo";
-      card.innerHTML=`
-        <div class="topo">
-          <label><input type="checkbox" onchange="toggleSel(this,'${emp}',${t.linha},${valor})"> Selecionar</label>
-          <span class="pill ${statusFiltro.toLowerCase()}">${statusFiltro}</span>
-        </div>
-        <div class="conteudo">
-          <div class="info">
-            <div><b>${t.fornecedor}</b> • ${emp}</div>
-            <div class="row">Venc: <b>${iso(t.vencimento).split("-").reverse().join("/")}</b> • Meio: <b>${t.meio_pagamento}</b></div>
-            <div class="row">Valor: <b>${BRL(valor)}</b></div>
-          </div>
-          ${statusFiltro==="Aprovado"?`<button class="btn-card" onclick="liquidar('${emp}',${t.linha})">✓ Liquidar</button>`:""}
-        </div>
-      `;
-      lista.appendChild(card);
-    });
-  }
-}
+  TITULOS.forEach(t=>{
+    const card=document.createElement("div");
+    card.className="titulo";card.dataset.linha=t.linha;card.dataset.emp=t.empresa;
+    const valor=Number(String(t.valor).replace("R$","").replace(/\./g,"").replace(",","."))||0;
+    card.dataset.valor=valor;
 
-async function loadTitulos(empresas,inicio,fim,filtroStatus,filtroMeio){
-  TITULOS={};
-  const resps=await Promise.all(empresas.map(emp=>
-    fetch(`${endpoint}?action=listar&empresa=${encodeURIComponent(emp)}`)
-      .then(r=>r.json().then(d=>({emp,data:d.titulos||d})))
-  ));
-  resps.forEach(({emp,data})=>{
-    const all=data.filter(t=>{
-      const d=iso(t.vencimento);
-      return (!inicio||d>=inicio)&&(!fim||d<=fim)&&(t.status===filtroStatus);
-    });
-    const arr=all.filter(t=>{
-      const meio=(t.meio_pagamento||"").toLowerCase();
-      if(filtroMeio==="Todos") return true;
-      if(filtroMeio==="Pix" && meio.includes("pix")) return true;
-      if(filtroMeio==="Cartão" && meio.includes("cart")) return true;
-      if(filtroMeio==="Boleto" && meio.includes("bol")) return true;
-      if(filtroMeio==="Outros" && !/pix|cart|bol/.test(meio)) return true;
-      return false;
-    });
-    TITULOS[emp]=arr;
+    card.innerHTML=`
+      <div class="topo">
+        <label class="ck"><input type="checkbox" onchange="toggleSel(this)"> Selecionar</label>
+        <span class="pill">${t.status}</span>
+      </div>
+      <div><b>${t.fornecedor}</b> • ${t.empresa}</div>
+      <div class="row">Venc: <b>${iso(t.vencimento).split("-").reverse().join("/")}</b> • Meio: <b>${t.meio_pagamento||"Outros"}</b></div>
+      <div class="row">Valor: <b>${BRL(valor)}</b></div>
+      <div class="acoes"><button class="btn liquidar" onclick="liquidar(this)">✓ Liquidar</button></div>
+    `;
+    lista.appendChild(card);
   });
 }
 
-async function refresh(ini,fim){
+function toggleSel(chk){
+  const card=chk.closest(".titulo");
+  if(chk.checked)SELEC.push(card);else SELEC=SELEC.filter(c=>c!==card);
+}
+
+async function liquidar(btn){
+  const card=btn.closest(".titulo");
+  const emp=card.dataset.emp,linha=card.dataset.linha;
+  try{
+    await fetch(`${endpoint}?action=atualizar&empresa=${encodeURIComponent(emp)}&linha=${linha}&status=Liquidado`);
+    card.querySelector(".pill").textContent="Liquidado";
+    card.querySelector(".pill").style.background="#0b3d0b";
+  }catch(e){console.error(e);}
+}
+
+async function liquidarMassa(){
+  for(const card of SELEC){
+    const emp=card.dataset.emp,linha=card.dataset.linha;
+    try{
+      await fetch(`${endpoint}?action=atualizar&empresa=${encodeURIComponent(emp)}&linha=${linha}&status=Liquidado`);
+      card.querySelector(".pill").textContent="Liquidado";
+      card.querySelector(".pill").style.background="#0b3d0b";
+    }catch(e){console.error(e);}
+  }
+  SELEC=[];
+}
+$("btnMassa").onclick=liquidarMassa;
+
+async function refresh(){
+  const status=$("filtroStatus").value;
+  const meio=$("filtroMeio").value;
   const empresa=$("filtroEmpresa").value;
-  const filtroMeio=$("filtroMeio").value;
-  const filtroStatus=$("filtroStatus").value;
-  await loadTitulos([empresa],ini,fim,filtroStatus,filtroMeio);
+  const periodo=$("filtroPeriodo").value;
+  const [ini,fim]=periodo.includes(" to ")?periodo.split(" to "):[periodo,periodo];
+
+  const r=await fetch(`${endpoint}?action=listar&empresa=${encodeURIComponent(empresa)}`);
+  const data=await r.json();
+  TITULOS=(data.titulos||data).filter(t=>{
+    const d=iso(t.vencimento);
+    const st=t.status||"";
+    const mp=(t.meio_pagamento||"Outros");
+    return (!status||st===status)&&
+           (meio==="Todos"||mp===meio)&&
+           (!ini||d>=ini)&&(!fim||d<=fim);
+  });
   renderLista();
 }
 
-async function liquidar(emp,linha){
-  await fetch(`${endpoint}?action=atualizar&empresa=${encodeURIComponent(emp)}&linha=${linha}&status=Liquidado`);
-  refresh(iso(new Date()),iso(new Date()));
-}
-
-$("btnMassa").onclick=async()=>{
-  for(const s of SELEC){
-    await fetch(`${endpoint}?action=atualizar&empresa=${encodeURIComponent(s.emp)}&linha=${s.linha}&status=Liquidado`);
-  }
-  SELEC=[];
-  $("btnMassa").style.display="none";
-  refresh(iso(new Date()),iso(new Date()));
-};
-
 (function boot(){
   const hoje=iso(new Date());
-  flatpickr("#filtroPeriodo",{mode:"range",dateFormat:"Y-m-d",defaultDate:[hoje,hoje],
-    onClose:sel=>{if(sel.length===2){refresh(iso(sel[0]),iso(sel[1]));}}});
-  EMPRESAS.forEach(emp=>{
-    const opt=document.createElement("option");
-    opt.value=emp;opt.textContent=emp;
-    $("filtroEmpresa").appendChild(opt);
-  });
-  $("filtroEmpresa").value=EMPRESAS[0];
-  $("filtroStatus").onchange=()=>refresh(hoje,hoje);
-  $("filtroMeio").onchange=()=>refresh(hoje,hoje);
-  $("filtroEmpresa").onchange=()=>refresh(hoje,hoje);
-  refresh(hoje,hoje);
+  flatpickr("#filtroPeriodo",{mode:"range",dateFormat:"Y-m-d",defaultDate:[hoje,hoje],onClose:()=>refresh()});
+  ["filtroStatus","filtroMeio","filtroEmpresa"].forEach(id=>$(id).onchange=refresh);
+  refresh();
 })();
 </script>
 </body>
