@@ -48,7 +48,7 @@
   .topo{display:flex;align-items:center;justify-content:space-between}
   .ck{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:13px}
   .ck input{width:18px;height:18px}
-  .row{display:flex;gap:10px;flex-wrap:wrap;font-size:14px;color:var(--muted)}
+  .row{display:flex;gap:10px;flex-wrap:wrap;font-size:14px;color:var(--muted);word-break:break-word}
   .row b{color:var(--ink);font-size:15px}
 
   .pill{padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700}
@@ -114,15 +114,6 @@ const iso = d => {const dt=new Date(d);dt.setMinutes(dt.getMinutes()-dt.getTimez
 
 let TITULOS=[],SELEC=[];
 
-// mapa empresa fantasia → aba
-const MAP_EMPRESAS={
-  "DELÍCIA GOURMET":"cap delicia",
-  "VILLA GOURMET":"cap villa",
-  "PADARIA DELÍCIA":"cap padaria",
-  "MERCATTO":"cap mercatto",
-  "M.KIDS":"cap m.kids"
-};
-
 // 🔹 Salvar seleção
 function salvarSelecoes(){
   const ids=SELEC.map(c=>c.dataset.linha+"|"+c.dataset.emp);
@@ -145,27 +136,32 @@ function restaurarSelecoes(){
 
 function renderLista(){
   const lista=$("lista");lista.innerHTML="";SELEC=[];
+  const abaSelecionada=$("filtroEmpresa").value; // pega a aba escolhida no filtro
+
   TITULOS.forEach(t=>{
     const card=document.createElement("div");
     card.className="titulo";
     card.dataset.linha=t.linha;
-    card.dataset.emp=(t.empresa||"").toLowerCase(); // garante aba correta
+    card.dataset.emp=abaSelecionada; // usa a aba, não o nome exibido
     card.dataset.status=t.status;
 
     const valor=Number(String(t.valor).replace("R$","").replace(/\./g,"").replace(",","."))||0;
     card.dataset.valor=valor;
 
     let st=t.status||"";let pillClass=st.toLowerCase();
+    const historico=(t.historico||"").toString().trim().replace(/\n/g,"<br>");
+    const obs=(t.observacao??"").toString().trim().replace(/\n/g,"<br>");
+
     card.innerHTML=`
       <div class="topo">
         <label class="ck"><input type="checkbox" onchange="toggleSel(this)"> Selecionar</label>
         <span class="pill ${pillClass}">${st}</span>
       </div>
-      <div><b>${t.fornecedor}</b> • ${Object.keys(MAP_EMPRESAS).find(k=>MAP_EMPRESAS[k]===t.empresa) || t.empresa}</div>
+      <div><b>${t.fornecedor||"-"}</b> • ${t.empresa||"-"}</div>
       <div class="row">Venc: <b>${iso(t.vencimento).split("-").reverse().join("/")}</b> • Meio: <b>${t.meio_pagamento||"Outros"}</b></div>
       <div class="row">Valor: <b>${BRL(valor)}</b></div>
-      <div class="row">Histórico: <b>${t.historico||"-"}</b></div>
-      <div class="row">Obs: <b>${t.observacoes||"-"}</b></div>
+      <div class="row">Histórico: <b>${historico||"-"}</b></div>
+      <div class="row">Obs: <b>${obs||"-"}</b></div>
       <div class="acoes">
         <button class="btn liquidar" onclick="liquidar(this)" ${st!=="Aprovado"?"disabled style='opacity:0.5;cursor:not-allowed'":""}>✓ Liquidar</button>
       </div>
@@ -197,7 +193,7 @@ async function liquidar(btn){
   try{
     const r=await fetch(`${endpoint}?action=atualizar&empresa=${encodeURIComponent(emp)}&linha=${linha}&status=Liquidado`);
     const txt=await r.text();
-    if(txt.includes("ok")||txt.includes("success")){
+    if(txt.includes("sucesso")||txt.includes("success")){
       card.querySelector(".pill").textContent="Liquidado";
       card.querySelector(".pill").className="pill liquidado";
       card.dataset.status="Liquidado";
@@ -216,7 +212,7 @@ async function liquidarMassa(){
     try{
       const r=await fetch(`${endpoint}?action=atualizar&empresa=${encodeURIComponent(emp)}&linha=${linha}&status=Liquidado`);
       const txt=await r.text();
-      if(txt.includes("ok")||txt.includes("success")){
+      if(txt.includes("sucesso")||txt.includes("success")){
         card.querySelector(".pill").textContent="Liquidado";
         card.querySelector(".pill").className="pill liquidado";
         card.dataset.status="Liquidado";
