@@ -257,7 +257,9 @@ async function acaoStatus(btn,novo){
 }
 
 /* Aprovar em massa */
+/* Aprovar em massa */
 async function atualizarStatusMassa(novo="Aprovado"){
+  showOverlay(); // mostra o overlay enquanto salva
   for(const s of SELEC){
     const card=document.querySelector(`.titulo[data-id="${s.id}"]`);
     if(!card) continue;
@@ -270,7 +272,9 @@ async function atualizarStatusMassa(novo="Aprovado"){
   SELEC=[];
   $("master").checked=false;
   renderSelecionados();
+  hideOverlay(); // esconde após concluir tudo
 }
+
 $("btnMassa").onclick=()=>atualizarStatusMassa("Aprovado");
 
 /* Observação */
