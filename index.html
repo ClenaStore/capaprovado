@@ -50,6 +50,7 @@
   .ck input{width:22px;height:22px}
   .row{display:flex;gap:10px;flex-wrap:wrap;font-size:14px;color:var(--muted)}
   .row b{color:var(--ink);font-size:15px}
+  .row.hist{color:#f59e0b;font-weight:600}
   .pill{padding:6px 12px;border-radius:999px;border:1px solid #2a3955;background:#0b1528;font-size:13px;font-weight:800}
   .pill.ok{border-color:#155e32;color:#b6f3c5;background:#0e2a1b}
   .pill.warn{border-color:#7a1e1e;color:#ffb4b4;background:#2a0e0e}
@@ -188,6 +189,7 @@ function renderLista(){
       const id=ID(emp,t.linha);
       const st=(t.status || "Pendente");
       const obs=(t.observacao || "");
+      const hist=(t.historico || "");
       const card=document.createElement("div");
       card.className="titulo";card.dataset.id=id;card.dataset.emp=emp;card.dataset.linha=t.linha;card.dataset.valor=valor;
       card.innerHTML=`
@@ -197,6 +199,7 @@ function renderLista(){
           <div class="row">Venc: <b>${iso(t.vencimento).split("-").reverse().join("/")}</b> • Meio: <b>${t.meio_pagamento||"Outros"}</b></div>
           <div class="row">Valor: <b>${BRL(valor)}</b> <span class="pill" data-status>${st}</span></div>
           ${obs ? `<div class="row obs" style="color:#60a5fa">Obs: ${obs}</div>` : ""}
+          ${hist ? `<div class="row hist">Histórico: ${hist}</div>` : ""}
         </div>
         <div class="actions">
           <button class="mini obs" onclick="event.stopPropagation();abrirObs('${id}','${emp}',${t.linha},\`${obs}\`)">✏️ Obs</button>
