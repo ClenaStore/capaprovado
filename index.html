@@ -127,7 +127,7 @@
 </div>
 
 <script>
-const endpointTitulos="https://script.google.com/macros/s/AKfycbxmFfmEIvauO3T8jmcQOSk_N_g_-KzMXsYQ61XGULdt5K-mTs7jEJ3mXA47FNA_obEa/exec";
+const endpointTitulos="https://script.google.com/macros/s/AKfycbzqb4FAVuDdmu_1Z8boXUz52lxOKFIjbQlDYQwjBTztAhcIcTBc_maXsrv9kTO7rRLZ/exec";
 const EMP_DEFAULT=["CAP DELICIA","CAP VILLA","CAP PADARIA","CAP MERCATTO","CAP M.KIDS"];
 let TITULOS={},SELEC=[],obsContext={};
 
@@ -276,15 +276,14 @@ async function refresh(){
   const filtro=$("filtroStatus").value;
   const filtroMeio=$("filtroMeio").value;
   const empresa=document.querySelector("#menuEmpresas input:checked").value;
-  // sempre pega a data atual se não houver valor
-  const periodo=$("filtroPeriodo").value || new Date().toISOString().slice(0,10);
+  const periodo=$("filtroPeriodo").value || "2025-09-18"; // força dia 18
   const inicio=periodo,fim=periodo;
   await loadTitulos([empresa],inicio,fim,filtro,filtroMeio);
   $("empresaSelecionada").textContent=empresa;
   renderLista();hideOverlay();
 }
 (function boot(){
-  const hoje=new Date().toISOString().slice(0,10);
+  const hoje="2025-09-18"; // fixa 18/09/2025
   $("filtroPeriodo").value=hoje;
   const M=$("menuEmpresas");EMP_DEFAULT.forEach((emp,i)=>{
     const lbl=document.createElement("label");
