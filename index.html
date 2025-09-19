@@ -292,13 +292,42 @@ async function salvarObs(){
   const {id,emp,linha}=obsContext;
   const texto=$("textoObs").value.trim();
   if(!texto)return;
+
   const btn=$("modalObs").querySelector(".btn");
   setLoading(btn,true);
-  addHistLocal(id,"Observação: "+texto);
-  try{await fetch(`${endpointTitulos}?action=atualizarObservacao&empresa=${encodeURIComponent(emp)}&linha=${linha}&texto=${encodeURIComponent(texto)}`);}catch(e){console.error(e)}
+
+  // Mostra em cinza (pendente) imediatamente
+  addHistLocal(id,"Obs pendente: "+texto);
+  renderLista();
+
+  try{
+    const resp = await fetch(`${endpointTitulos}?action=atualizarObservacao&empresa=${encodeURIComponent(emp)}&linha=${linha}&texto=${encodeURIComponent(texto)}`);
+    const ok = resp.ok;
+
+    if(ok){
+      // remove obs locais porque já confirmou na planilha
+      localStorage.removeItem("hist_"+id);
+
+      // acha o card em tela e atualiza direto
+      const card=document.querySelector(`.titulo[data-id="${id}"]`);
+      if(card){
+        const info=card.querySelector(".info");
+        // remove observações antigas
+        info.querySelectorAll(".row.obs").forEach(e=>e.remove());
+        // adiciona a azul confirmada
+        const div=document.createElement("div");
+        div.className="row obs";
+        div.style.color="#60a5fa"; // azul
+        div.textContent="Obs (planilha): "+texto;
+        info.appendChild(div);
+      }
+    }
+  }catch(e){console.error(e)}
+
   setLoading(btn,false);
-  fecharObs();renderLista();
+  fecharObs();
 }
+
 
 async function loadTitulos(empresas,inicio,fim,filtroStatus,filtroMeio){
   TITULOS={};$("overlay").style.display="flex";
