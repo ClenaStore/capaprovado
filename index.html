@@ -22,24 +22,23 @@
   .row-filtros{display:flex;gap:8px;width:100%}
   .row-filtros select{flex:1}
 
+  .row-linha{display:flex;gap:8px;width:100%}
+  .row-linha input{flex:1}
+
   select,input{background:#0b1528;border:1px solid #22314b;color:var(--ink);
     padding:10px 14px;border-radius:10px;font-size:15px;width:100%}
-  .btn{border:1px solid #2a3955;background:#0b1528;color:var(--ink);padding:10px 14px;border-radius:10px;cursor:pointer;font-weight:700;font-size:15px;width:100%}
+  .btn{border:1px solid #2a3955;background:#0b1528;color:var(--ink);padding:10px 14px;border-radius:10px;cursor:pointer;font-weight:700;font-size:15px;width:100%;position:relative;overflow:hidden}
   .btn.icon{display:flex;align-items:center;gap:6px;justify-content:center}
 
   #overlay{position:fixed;inset:0;background:rgba(3,7,18,.55);display:none;align-items:center;justify-content:center;z-index:100}
   .spinner{width:56px;height:56px;border:6px solid var(--teal);border-top-color:transparent;border-radius:50%;animation:spin 1s linear infinite}
   @keyframes spin{to{transform:rotate(360deg)}}
 
+  .spinner-btn{width:16px;height:16px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:spin 1s linear infinite;position:absolute;top:50%;left:50%;margin:-8px 0 0 -8px;display:none}
+  .loading .spinner-btn{display:block}
+  .loading span,.loading b,.loading i{visibility:hidden}
+
   .container{padding:16px;max-width:1250px;margin:0 auto}
-.row-linha {
-  display: flex;
-  gap: 8px;
-  width: 100%;
-}
-.row-linha input {
-  flex: 1;
-}
 
   .mods-card{margin:16px 0;background:#0f172a;border:1px solid var(--line);border-radius:18px;padding:16px}
   .mods{display:grid;grid-template-columns:1fr;gap:12px}
@@ -66,7 +65,7 @@
   .pill.warn{border-color:#7a1e1e;color:#ffb4b4;background:#2a0e0e}
 
   .actions{display:flex;gap:6px;flex-wrap:wrap}
-  .mini{flex:1 1 calc(50% - 6px);padding:8px;border-radius:12px;border:1px solid #22314b;background:#0b1528;color:#fff;font-weight:700;cursor:pointer;font-size:14px;text-align:center}
+  .mini{flex:1 1 calc(50% - 6px);padding:8px;border-radius:12px;border:1px solid #22314b;background:#0b1528;color:#fff;font-weight:700;cursor:pointer;font-size:14px;text-align:center;position:relative;overflow:hidden}
   .mini.aprovar{background:linear-gradient(180deg,#19c37d,#16a34a)}
   .mini.negar{background:linear-gradient(180deg,#fb6969,#ef4444)}
   .mini.obs{background:linear-gradient(180deg,#60a5fa,#1d4ed8)}
@@ -75,7 +74,7 @@
 
   .footer{position:fixed;left:0;right:0;bottom:0;display:flex;flex-direction:column;gap:10px;align-items:stretch;z-index:15;padding:12px}
   .bubble{background:var(--blue);color:#fff;border-radius:12px;padding:12px 16px;font-weight:700;font-size:15px;text-align:center}
-  .btn-massa{background:linear-gradient(180deg,var(--teal),#0796ad);color:#002027;border:0;border-radius:12px;padding:14px;font-weight:800;cursor:pointer;font-size:15px;width:100%}
+  .btn-massa{background:linear-gradient(180deg,var(--teal),#0796ad);color:#002027;border:0;border-radius:12px;padding:14px;font-weight:800;cursor:pointer;font-size:15px;width:100%;position:relative;overflow:hidden}
   .btn-massa.loading{opacity:.8;pointer-events:none}
 
   .menu{position:absolute;top:100%;right:0;background:#0f172a;border:1px solid var(--line);
@@ -110,19 +109,15 @@
       </select>
     </div>
 
-    <!-- NOVA LINHA: Período + Empresas juntos -->
     <div class="row-linha">
       <input type="text" id="filtroPeriodo" placeholder="Selecione período" />
       <div style="position:relative;flex:1">
-        <button class="btn icon" id="btnEmpresas"> 
-          <span id="empresaSelecionada">CAP DELICIA</span> ▼
-        </button>
+        <button class="btn icon" id="btnEmpresas"><span id="empresaSelecionada">CAP DELICIA</span> ▼</button>
         <div id="menuEmpresas" class="menu"></div>
       </div>
     </div>
   </div>
 </header>
-
 
 <div id="overlay"><div class="spinner"></div></div>
 
@@ -141,7 +136,7 @@
 
 <div class="footer">
   <div id="bubble" class="bubble" style="display:none">Total selecionado: R$ 0,00</div>
-  <button id="btnMassa" class="btn-massa" style="display:none">Aprovar selecionados</button>
+  <button id="btnMassa" class="btn-massa" style="display:none"><span>Aprovar selecionados</span><div class="spinner-btn"></div></button>
 </div>
 
 <!-- modal observação -->
@@ -150,7 +145,7 @@
     <button class="close" onclick="fecharObs()">Fechar</button>
     <h3>Observação</h3>
     <textarea id="textoObs" placeholder="Digite a observação..."></textarea>
-    <button class="btn" style="margin-top:10px" onclick="salvarObs()">Salvar</button>
+    <button class="btn" style="margin-top:10px" onclick="salvarObs()"><span>Salvar</span><div class="spinner-btn"></div></button>
   </div>
 </div>
 
@@ -172,6 +167,8 @@ const $=id=>document.getElementById(id);
 const BRL=n=>(isNaN(n)?0:n).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
 const iso = d => { const dt=new Date(d); dt.setMinutes(dt.getMinutes()-dt.getTimezoneOffset()); return dt.toISOString().slice(0,10); };
 const ID=(emp,linha)=>`${emp.replace(/\s+/g,'_')}__${linha}`;
+
+function setLoading(btn,on=true){if(on)btn.classList.add("loading");else btn.classList.remove("loading");}
 
 // histórico local
 function addHistLocal(id,texto){
@@ -204,10 +201,8 @@ async function abrirHistorico(id,emp,linha){
 function fecharHist(){$("modalHist").style.display="none"}
 
 function renderMods(){
-  const mods=$("mods");
-  mods.innerHTML="";
+  const mods=$("mods");mods.innerHTML="";
   let soma={Pix:0,Cartão:0,Boleto:0,Outros:0,Total:0};
-
   for(const emp of Object.keys(TITULOS)){
     (TITULOS[emp]||[]).forEach(t=>{
       const valor=Number(String(t.valor).replace("R$","").replace(/\./g,"").replace(",","."))||0;
@@ -217,13 +212,7 @@ function renderMods(){
       else soma.Outros+=valor;
     });
   }
-
-  const card=(cls,label,val)=>`
-    <div class="mod ${cls}">
-      <span>${label}</span>
-      <b>${BRL(val)}</b>
-    </div>`;
-
+  const card=(cls,label,val)=>`<div class="mod ${cls}"><span>${label}</span><b>${BRL(val)}</b></div>`;
   mods.innerHTML+=card("pix","Pix",soma.Pix);
   mods.innerHTML+=card("cartao","Cartão",soma["Cartão"]);
   mods.innerHTML+=card("boleto","Boleto",soma.Boleto);
@@ -257,10 +246,10 @@ function renderLista(){
         </div>
         <span class="pill" data-status>${st}</span>
         <div class="actions">
-          <button class="mini obs" onclick="abrirObs('${id}','${emp}',${t.linha},\`${obs}\`)">✏️ Obs</button>
-          <button class="mini aprovar" onclick="acaoStatus(this,'Aprovado')">✓ Aprovar</button>
-          <button class="mini negar" onclick="acaoStatus(this,'Negado')">✗ Negar</button>
-          <button class="mini hist" onclick="abrirHistorico('${id}','${emp}',${t.linha})">📜 Histórico</button>
+          <button class="mini obs" onclick="abrirObs('${id}','${emp}',${t.linha},\`${obs}\`)"><span>✏️ Obs</span><div class="spinner-btn"></div></button>
+          <button class="mini aprovar" onclick="acaoStatus(this,'Aprovado')"><span>✓ Aprovar</span><div class="spinner-btn"></div></button>
+          <button class="mini negar" onclick="acaoStatus(this,'Negado')"><span>✗ Negar</span><div class="spinner-btn"></div></button>
+          <button class="mini hist" onclick="abrirHistorico('${id}','${emp}',${t.linha})"><span>📜 Histórico</span><div class="spinner-btn"></div></button>
         </div>`;
       setPill(card.querySelector("[data-status]"),st);
       lista.appendChild(card);
@@ -289,9 +278,11 @@ function toggleSel(chk){
 async function acaoStatus(btn,novo){
   const card=btn.closest(".titulo");
   const emp=card.dataset.emp,linha=card.dataset.linha,id=card.dataset.id;
+  setLoading(btn,true);
   setPill(card.querySelector("[data-status]"),novo);
   addHistLocal(id,"Status alterado para "+novo);
   try{await fetch(`${endpointTitulos}?action=atualizar&empresa=${encodeURIComponent(emp)}&linha=${linha}&status=${encodeURIComponent(novo)}`);}catch(e){console.error(e)}
+  setLoading(btn,false);
 }
 
 function abrirObs(id,emp,linha,txt){
@@ -303,13 +294,16 @@ async function salvarObs(){
   const {id,emp,linha}=obsContext;
   const texto=$("textoObs").value.trim();
   if(!texto)return;
+  const btn=$("modalObs").querySelector(".btn");
+  setLoading(btn,true);
   addHistLocal(id,"Observação: "+texto);
   try{await fetch(`${endpointTitulos}?action=atualizarObservacao&empresa=${encodeURIComponent(emp)}&linha=${linha}&texto=${encodeURIComponent(texto)}`);}catch(e){console.error(e)}
+  setLoading(btn,false);
   fecharObs();renderLista();
 }
 
 async function loadTitulos(empresas,inicio,fim,filtroStatus,filtroMeio){
-  TITULOS={};
+  TITULOS={};$("overlay").style.display="flex";
   const resps=await Promise.all(empresas.map(emp=>
     fetch(`${endpointTitulos}?action=listar&empresa=${encodeURIComponent(emp)}`)
       .then(r=>r.json().then(d=>({emp,data:d.titulos||d})))
@@ -325,6 +319,7 @@ async function loadTitulos(empresas,inicio,fim,filtroStatus,filtroMeio){
     });
     TITULOS[emp]=arr;
   });
+  $("overlay").style.display="none";
 }
 async function refresh(inicio,fim){
   const filtro=$("filtroStatus").value;
