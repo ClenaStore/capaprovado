@@ -18,38 +18,32 @@
     border-bottom:1px solid var(--line);padding:14px}
   header h1{font-size:18px;margin:0 0 12px 0;font-weight:800}
 
-  .row-filtros{display:flex;align-items:center;gap:8px;width:100%;margin-bottom:8px}
+  .row-filtros{display:flex;gap:8px;width:100%;margin-bottom:8px}
   select,input{background:#0b1528;border:1px solid #22314b;color:var(--ink);
-    padding:10px 14px;border-radius:10px;font-size:15px}
+    padding:10px 14px;border-radius:10px;font-size:15px;width:100%}
 
-  /* 🔹 Resumo agora em linha */
-  .statusResumo{display:flex;gap:16px;margin-left:auto}
-  .statusResumo div{font-size:14px;font-weight:700}
+  .statusResumo{display:flex;gap:16px;margin-bottom:12px;padding-left:4px}
+  .statusResumo div{font-size:14px;font-weight:600}
   .statusResumo .aprovado{color:var(--green)}
   .statusResumo .pendente{color:var(--amber)}
   .statusResumo .negado{color:var(--red)}
   .statusResumo .liquidado{color:var(--blue)}
 
   .container{padding:16px;max-width:100%;margin:0 auto}
-  .lista{display:flex;flex-direction:column;gap:12px;width:100%}
+  .lista{display:flex;flex-direction:column;gap:16px;width:100%}
 
-.titulo{
-  width:95%;          /* ocupa quase toda a largura da tela */
-  max-width:1400px;   /* aumenta o limite lateral */
-  min-height:100px;   /* 🔹 mais baixo (fino na altura) */
-  margin:0 auto;
-  background:#101a2f;
-  border:1px solid var(--line);
-  border-radius:10px;
-  padding:12px 18px;  /* respiro interno */
-  display:flex;
-  flex-direction:column;
-  justify-content:space-between;
-  gap:6px;
-  position:relative;
-}
-
-
+  .titulo{
+    width:95%;
+    margin:0 auto;
+    background:#101a2f;
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:10px 16px;
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+    position:relative;
+  }
 
   .topo{display:flex;align-items:center;justify-content:space-between}
   .ck{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:13px}
@@ -64,7 +58,7 @@
   .pill.liquidado{background:#0b2a3d;color:#b2d8ff;border:1px solid #2563eb}
 
   .acoes{display:flex;justify-content:flex-end;margin-top:6px}
-  .btn{padding:8px 14px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;border:0}
+  .btn{padding:6px 12px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;border:0}
   .liquidar{background:linear-gradient(180deg,#19c37d,#16a34a);color:#fff}
 
   .footer{position:fixed;left:0;right:0;bottom:0;padding:12px;background:#0f172a;border-top:1px solid var(--line);
@@ -98,10 +92,10 @@
       <option>CAP MERCATTO</option>
       <option>CAP M.KIDS</option>
     </select>
-
-    <!-- 🔹 Resumo inline -->
-    <div id="statusResumo" class="statusResumo"></div>
   </div>
+
+  <!-- Resumo de status -->
+  <div id="statusResumo" class="statusResumo"></div>
 </header>
 
 <div class="container">
@@ -157,6 +151,8 @@ function renderLista(){
       <div><b>${t.fornecedor}</b> • ${t.empresa}</div>
       <div class="row">Venc: <b>${iso(t.vencimento).split("-").reverse().join("/")}</b> • Meio: <b>${t.meio_pagamento||"Outros"}</b></div>
       <div class="row">Valor: <b>${BRL(valor)}</b></div>
+      <div class="row">Histórico: <b>${t.historico||"-"}</b></div>
+      <div class="row">Obs: <b>${t.observacoes||"-"}</b></div>
       <div class="acoes"><button class="btn liquidar" onclick="liquidar(this)">✓ Liquidar</button></div>
     `;
     lista.appendChild(card);
