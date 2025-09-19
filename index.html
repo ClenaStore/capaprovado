@@ -81,6 +81,16 @@
       <option value="Liquidado">Liquidados</option>
       <option value="Todos">Todos</option>
     </select>
+
+    <label for="filtroMeio" style="font-size:12px">Forma:</label>
+    <select id="filtroMeio">
+      <option value="Todos" selected>Todos</option>
+      <option value="Pix">Pix</option>
+      <option value="Cartão">Cartão</option>
+      <option value="Boleto">Boleto</option>
+      <option value="Outros">Outros</option>
+    </select>
+
     <input type="date" id="filtroPeriodo" multiple />
     <button class="btn icon" id="btnEmpresas">Empresa: <span id="empresaSelecionada">CAP DELICIA</span> ▼</button>
   </div>
@@ -142,7 +152,7 @@ function hideOverlay(){$("overlay").style.display="none"}
 $("btnEmpresas").onclick=()=>{const m=$("menuEmpresas");m.style.display=(m.style.display==="block"?"none":"block")};
 document.addEventListener("click",e=>{const m=$("menuEmpresas");if(!m.contains(e.target)&&e.target!==$("btnEmpresas"))m.style.display="none"});
 
-async function loadTitulos(empresas,inicio,fim,filtro){
+async function loadTitulos(empresas,inicio,fim,filtroStatus,filtroMeio){
   TITULOS={};
   const resps=await Promise.all(empresas.map(emp=>
     fetch(`${endpointTitulos}?action=listar&empresa=${encodeURIComponent(emp)}`)
@@ -155,7 +165,10 @@ async function loadTitulos(empresas,inicio,fim,filtro){
     });
     const arr=all.filter(t=>{
       let st=(t.status==="Sim"?"Pendente":t.status);
-      return filtro==="Todos"?true:(st===filtro);
+      const meio=(t.meio_pagamento||"Outros");
+      const statusOk=filtroStatus==="Todos"?true:(st===filtroStatus);
+      const meioOk=filtroMeio==="Todos"?true:(meio.toLowerCase().includes(filtroMeio.toLowerCase()));
+      return statusOk && meioOk;
     });
     TITULOS[emp]=arr;
   });
@@ -236,9 +249,8 @@ function toggleSel(chk){
 function renderSelecionados(){
   const total=SELEC.reduce((s,x)=>s+x.valor,0);
   if(SELEC.length){$("bubble").style.display="block";$("btnMassa").style.display="block";$("bubble").textContent="Total selecionado: "+BRL(total)}
-  else{$("bubble").style.display="none";$("btnMassa").style.display="none"}
-}
-
+  else{$("bubble").style.display="none";$("btnMassa").style.display="none"}}
+  
 /* Aprovar/Negar */
 async function acaoStatus(btn,novo){
   const card=btn.closest(".titulo");
@@ -289,10 +301,11 @@ async function salvarObs(){
 async function refresh(){
   showOverlay();
   const filtro=$("filtroStatus").value;
+  const filtroMeio=$("filtroMeio").value;
   const empresa=document.querySelector("#menuEmpresas input:checked").value;
   const periodo=$("filtroPeriodo").value.split(",");
   const inicio=periodo[0]||"",fim=periodo[1]||periodo[0]||"";
-  await loadTitulos([empresa],inicio,fim,filtro);
+  await loadTitulos([empresa],inicio,fim,filtro,filtroMeio);
   $("empresaSelecionada").textContent=empresa;
   renderLista();hideOverlay();
 }
@@ -307,6 +320,7 @@ async function refresh(){
   });
   $("filtroStatus").onchange=refresh;
   $("filtroPeriodo").onchange=refresh;
+  $("filtroMeio").onchange=refresh;
   refresh();
 })();
 </script>
