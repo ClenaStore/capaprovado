@@ -183,15 +183,15 @@ async function liquidar(btn){
   const emp=card.dataset.emp,linha=card.dataset.linha;
   try{
     const r=await fetch(`${endpoint}?action=atualizar&empresa=${encodeURIComponent(emp)}&linha=${linha}&status=Liquidado`);
-    const data=await r.json();
-    if(data.success){
+    const txt=await r.text();   // 🔹 pega como texto
+    if(txt.includes("ok")||txt.includes("success")){  // 🔹 aceita retorno simples
       card.querySelector(".pill").textContent="Liquidado";
       card.querySelector(".pill").className="pill liquidado";
       card.dataset.status="Liquidado";
       btn.disabled=true;
       btn.style.opacity="0.5";
     }else{
-      alert("Erro ao liquidar título.");
+      alert("Erro ao liquidar título. Resposta: "+txt);
     }
     salvarSelecoes();
   }catch(e){console.error(e);}
@@ -203,8 +203,8 @@ async function liquidarMassa(){
     const emp=card.dataset.emp,linha=card.dataset.linha;
     try{
       const r=await fetch(`${endpoint}?action=atualizar&empresa=${encodeURIComponent(emp)}&linha=${linha}&status=Liquidado`);
-      const data=await r.json();
-      if(data.success){
+      const txt=await r.text();
+      if(txt.includes("ok")||txt.includes("success")){
         card.querySelector(".pill").textContent="Liquidado";
         card.querySelector(".pill").className="pill liquidado";
         card.dataset.status="Liquidado";
@@ -216,6 +216,7 @@ async function liquidarMassa(){
   SELEC=[];
   salvarSelecoes();
 }
+
 $("btnMassa").onclick=liquidarMassa;
 
 async function refresh(){
