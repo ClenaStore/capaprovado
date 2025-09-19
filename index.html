@@ -9,7 +9,7 @@
 <style>
   :root{
     --bg:#0b1220;--card:#0f172a;--ink:#e5f0ff;--muted:#a8b3c7;--line:#243043;
-    --green:#16a34a;--blue:#4f46e5;
+    --green:#16a34a;
   }
   *{box-sizing:border-box}
   body{margin:0;font-family:Inter,system-ui;background:var(--bg);color:var(--ink)}
@@ -56,13 +56,13 @@
     <div class="row-linha">
       <input type="text" id="filtroPeriodo" placeholder="Selecione período" />
       <button id="btnEmpresas"><span id="empresaSelecionada">CAP DELICIA</span> ▼</button>
-      <div id="menuEmpresas" class="menu"></div>
+      <div id="menuEmpresas" class="menu" style="display:none;position:absolute;top:100%;left:0;background:#0f172a;border:1px solid var(--line);border-radius:10px;padding:10px;z-index:50"></div>
     </div>
   </div>
 </header>
 
 <div class="container">
-  <div class="lista" id="lista"></div>
+  <div id="lista" class="lista"></div>
 </div>
 
 <script>
@@ -76,8 +76,10 @@ const iso = d => {const dt=new Date(d);dt.setMinutes(dt.getMinutes()-dt.getTimez
 
 function renderLista(){
   const lista=$("lista");lista.innerHTML="";
+  let total=0;
   for(const emp of Object.keys(TITULOS)){
     TITULOS[emp].forEach(t=>{
+      total++;
       const valor=Number(String(t.valor).replace("R$","").replace(/\./g,"").replace(",","."))||0;
       const card=document.createElement("div");
       card.className="titulo";
@@ -91,6 +93,9 @@ function renderLista(){
         </div>`;
       lista.appendChild(card);
     });
+  }
+  if(total===0){
+    lista.innerHTML="<div style='color:var(--muted);text-align:center'>Nenhum aprovado encontrado</div>";
   }
 }
 
@@ -137,13 +142,16 @@ async function liquidar(emp,linha){
   const hoje=iso(new Date());
   flatpickr("#filtroPeriodo",{mode:"range",dateFormat:"Y-m-d",defaultDate:[hoje,hoje],
     onClose:sel=>{if(sel.length===2){refresh(iso(sel[0]),iso(sel[1]));}}});
-  const M=document.createElement("div");M.id="menuEmpresas";M.className="menu";
+  const M=$("menuEmpresas");
   EMPRESAS.forEach((emp,i)=>{
     const lbl=document.createElement("label");
+    lbl.style.display="block";
     lbl.innerHTML=`<input type="radio" name="empresaSel" value="${emp}" ${i===0?"checked":""}/> ${emp}`;
-    lbl.querySelector("input").onchange=()=>{refresh(hoje,hoje)};
-    $("btnEmpresas").after(lbl);
+    lbl.querySelector("input").onchange=()=>{refresh(hoje,hoje);M.style.display="none"};
+    M.appendChild(lbl);
   });
+  $("btnEmpresas").onclick=(e)=>{e.stopPropagation();M.style.display=M.style.display==="block"?"none":"block";};
+  document.addEventListener("click",(e)=>{if(!M.contains(e.target)&&e.target.id!=="btnEmpresas"){M.style.display="none";}});
   $("filtroMeio").onchange=()=>refresh(hoje,hoje);
   refresh(hoje,hoje);
 })();
