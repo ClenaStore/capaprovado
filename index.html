@@ -18,25 +18,47 @@
     border-bottom:1px solid var(--line);padding:14px}
   header h1{font-size:18px;margin:0 0 12px 0;font-weight:800}
 
-  .row-filtros{display:flex;gap:8px;width:100%}
-  select,input{background:#0b1528;border:1px solid #22314b;color:var(--ink);
-    padding:10px 14px;border-radius:10px;font-size:15px;width:100%}
-
-  .container{padding:20px;max-width:1400px;margin:0 auto}
-
-  /* 🔹 Status em texto */
-  .status-resumo{
-    margin:16px 0;
+  /* 🔹 Linha com filtros + resumo */
+  .row-top{
     display:flex;
-    flex-direction:column;
-    gap:6px;
-    font-size:15px;
+    flex-wrap:wrap;
+    gap:12px;
+    width:100%;
+    align-items:center;
+    justify-content:space-between;
   }
-  .status-linha{font-weight:600}
+  .row-filtros{
+    display:flex;
+    flex:3;
+    gap:8px;
+    min-width:280px;
+  }
+  select,input{
+    background:#0b1528;
+    border:1px solid #22314b;
+    color:var(--ink);
+    padding:10px 14px;
+    border-radius:10px;
+    font-size:15px;
+    width:100%;
+  }
+
+  /* 🔹 Resumo ao lado */
+  .status-resumo{
+    flex:2;
+    display:flex;
+    justify-content:flex-end;
+    gap:20px;
+    flex-wrap:wrap;
+    font-size:14px;
+    font-weight:700;
+  }
   .status-linha.aprovado{color:var(--green)}
   .status-linha.pendente{color:var(--amber)}
   .status-linha.negado{color:var(--red)}
   .status-linha.liquidado{color:var(--blue)}
+
+  .container{padding:20px;max-width:1400px;margin:0 auto}
 
   /* 🔹 Lista de cards */
   .lista{display:flex;flex-direction:column;gap:18px;align-items:center}
@@ -81,35 +103,37 @@
 <body>
 <header>
   <h1>Painel Financeiro • Aprovados</h1>
-  <div class="row-filtros">
-    <select id="filtroStatus">
-      <option value="Aprovado" selected>Aprovados</option>
-      <option value="Negado">Negados</option>
-      <option value="Pendente">Pendentes</option>
-      <option value="Liquidado">Liquidados</option>
-    </select>
-    <select id="filtroMeio">
-      <option value="Todos" selected>Todos</option>
-      <option value="Pix">Pix</option>
-      <option value="Cartão">Cartão</option>
-      <option value="Boleto">Boleto</option>
-      <option value="Outros">Outros</option>
-    </select>
-    <input type="text" id="filtroPeriodo" placeholder="Selecione período" />
-    <select id="filtroEmpresa">
-      <option>CAP DELICIA</option>
-      <option>CAP VILLA</option>
-      <option>CAP PADARIA</option>
-      <option>CAP MERCATTO</option>
-      <option>CAP M.KIDS</option>
-    </select>
+  <div class="row-top">
+    <!-- filtros -->
+    <div class="row-filtros">
+      <select id="filtroStatus">
+        <option value="Aprovado" selected>Aprovados</option>
+        <option value="Negado">Negados</option>
+        <option value="Pendente">Pendentes</option>
+        <option value="Liquidado">Liquidados</option>
+      </select>
+      <select id="filtroMeio">
+        <option value="Todos" selected>Todos</option>
+        <option value="Pix">Pix</option>
+        <option value="Cartão">Cartão</option>
+        <option value="Boleto">Boleto</option>
+        <option value="Outros">Outros</option>
+      </select>
+      <input type="text" id="filtroPeriodo" placeholder="Selecione período" />
+      <select id="filtroEmpresa">
+        <option>CAP DELICIA</option>
+        <option>CAP VILLA</option>
+        <option>CAP PADARIA</option>
+        <option>CAP MERCATTO</option>
+        <option>CAP M.KIDS</option>
+      </select>
+    </div>
+    <!-- resumo -->
+    <div id="statusResumo" class="status-resumo"></div>
   </div>
 </header>
 
 <div class="container">
-  <!-- Resumo em texto -->
-  <div id="statusResumo" class="status-resumo"></div>
-
   <!-- Lista -->
   <div id="lista" class="lista"></div>
 </div>
