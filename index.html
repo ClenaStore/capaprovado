@@ -10,7 +10,7 @@
 <style>
   :root{
     --bg:#0b1220;--card:#0f172a;--ink:#e5f0ff;--muted:#a8b3c7;--line:#243043;
-    --green:#16a34a;--red:#ef4444;--amber:#f59e0b;
+    --green:#16a34a;--red:#ef4444;--amber:#f59e0b;--blue:#3b82f6;
   }
   *{box-sizing:border-box}
   body{margin:0;font-family:Inter,system-ui;background:var(--bg);color:var(--ink);font-size:15px}
@@ -25,8 +25,23 @@
 
   .container{padding:16px;max-width:100%;margin:0 auto}
 
-  .grafico-card{background:#0f172a;border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:20px}
-  .grafico-card h2{font-size:16px;margin:0 0 10px;font-weight:700}
+  .grafico-card{
+    background:#0f172a;
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:12px;
+    margin-bottom:20px;
+    max-width:320px;
+  }
+  .grafico-card h2{
+    font-size:14px;
+    margin:0 0 8px;
+    font-weight:700;
+  }
+  #graficoStatus{
+    width:100% !important;
+    height:180px !important;
+  }
 
   .lista{display:flex;flex-direction:column;gap:12px;align-items:center}
   .titulo{width:98%;max-width:1200px;background:#101a2f;border:1px solid var(--line);
@@ -36,10 +51,13 @@
   .ck input{width:18px;height:18px}
   .row{display:flex;gap:10px;flex-wrap:wrap;font-size:14px;color:var(--muted)}
   .row b{color:var(--ink);font-size:15px}
+
   .pill{padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700}
   .pill.aprovado{background:#0e2a1b;color:#b6f3c5;border:1px solid #155e32}
   .pill.negado{background:#2a0e0e;color:#ffb4b4;border:1px solid #7a1e1e}
   .pill.pendente{background:#2a2a0e;color:#fff2b2;border:1px solid #b59d00}
+  .pill.liquidado{background:#0e1b2a;color:#c5e0ff;border:1px solid #1d4ed8}
+
   .acoes{display:flex;justify-content:flex-end;margin-top:6px}
   .btn{padding:8px 14px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;border:0}
   .liquidar{background:linear-gradient(180deg,#19c37d,#16a34a);color:#fff}
@@ -57,6 +75,7 @@
     <select id="filtroStatus">
       <option value="Aprovado" selected>Aprovados</option>
       <option value="Negado">Negados</option>
+      <option value="Pendente">Pendentes</option>
       <option value="Liquidado">Liquidados</option>
     </select>
     <select id="filtroMeio">
@@ -174,20 +193,22 @@ async function refresh(){
 }
 
 function atualizarGrafico(dados){
-  const counts={Aprovado:0,Pendente:0,Negado:0};
+  const counts={Aprovado:0,Pendente:0,Negado:0,Liquidado:0};
   dados.forEach(t=>{if(counts[t.status]!==undefined)counts[t.status]++;});
   const ctx=$("graficoStatus").getContext("2d");
   if(chart)chart.destroy();
   chart=new Chart(ctx,{
     type:"doughnut",
     data:{
-      labels:["Aprovado","Pendente","Negado"],
+      labels:["Aprovado","Pendente","Negado","Liquidado"],
       datasets:[{
-        data:[counts.Aprovado,counts.Pendente,counts.Negado],
-        backgroundColor:["#16a34a","#f59e0b","#ef4444"]
+        data:[counts.Aprovado,counts.Pendente,counts.Negado,counts.Liquidado],
+        backgroundColor:["#16a34a","#f59e0b","#ef4444","#3b82f6"]
       }]
     },
-    options:{plugins:{legend:{labels:{color:"#e5f0ff"}}}}
+    options:{
+      plugins:{legend:{labels:{color:"#e5f0ff"}}}
+    }
   });
 }
 
