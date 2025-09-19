@@ -69,6 +69,12 @@
   .menu{position:absolute;top:100%;right:0;background:#0f172a;border:1px solid var(--line);
     border-radius:14px;padding:14px;box-shadow:0 10px 30px rgba(0,0,0,.4);display:none;z-index:30}
   .menu label{display:block;font-size:15px;margin:6px 0}
+
+  .modal{position:fixed;inset:0;background:rgba(2,6,15,.65);display:none;align-items:center;justify-content:center;z-index:200}
+  .modal .box{background:#0f172a;border:1px solid var(--line);border-radius:16px;max-width:95%;width:500px;padding:16px}
+  .modal h3{margin:0 0 12px;font-size:18px}
+  .modal .close{float:right;border:1px solid var(--line);background:#0b1528;border-radius:8px;color:#fff;padding:6px 12px;cursor:pointer;font-size:14px}
+  textarea{width:100%;min-height:90px;border-radius:8px;border:1px solid #22314b;background:#0b1528;color:#fff;padding:10px;font-size:14px}
 </style>
 </head>
 <body>
@@ -119,17 +125,161 @@
   <button id="btnMassa" class="btn-massa" style="display:none">Aprovar selecionados</button>
 </div>
 
+<!-- modal observação -->
+<div id="modalObs" class="modal">
+  <div class="box">
+    <button class="close" onclick="fecharObs()">Fechar</button>
+    <h3>Observação</h3>
+    <textarea id="textoObs" placeholder="Digite a observação..."></textarea>
+    <button class="btn" style="margin-top:10px" onclick="salvarObs()">Salvar</button>
+  </div>
+</div>
+
+<!-- modal histórico -->
+<div id="modalHist" class="modal">
+  <div class="box">
+    <button class="close" onclick="fecharHist()">Fechar</button>
+    <h3>Histórico de alterações</h3>
+    <div id="histContent" style="max-height:340px;overflow:auto;font-size:14px"></div>
+  </div>
+</div>
+
 <script>
 const endpointTitulos="https://script.google.com/macros/s/AKfycbzzLGp4BH0X3-mdhMqG_e07wrnUo9yFXUmJ8wdP9iVVgPxk1-tnmjsCIAEAb7r_0_yd/exec";
 const EMP_DEFAULT=["CAP DELICIA","CAP VILLA","CAP PADARIA","CAP MERCATTO","CAP M.KIDS"];
-let TITULOS={},SELEC=[];
+let TITULOS={},SELEC=[],obsContext={};
 
 const $=id=>document.getElementById(id);
 const BRL=n=>(isNaN(n)?0:n).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
-const iso=d=>{const dt=new Date(d);dt.setMinutes(dt.getMinutes()-dt.getTimezoneOffset());return dt.toISOString().slice(0,10);};
+const iso = d => { const dt=new Date(d); dt.setMinutes(dt.getMinutes()-dt.getTimezoneOffset()); return dt.toISOString().slice(0,10); };
+const ID=(emp,linha)=>`${emp.replace(/\s+/g,'_')}__${linha}`;
 
 function showOverlay(){$("overlay").style.display="flex"}
 function hideOverlay(){$("overlay").style.display="none"}
+
+async function abrirHistorico(id,emp,linha){
+  showOverlay();
+  try{
+    const r=await fetch(`${endpointTitulos}?action=historico&empresa=${encodeURIComponent(emp)}&linha=${linha}`);
+    const hist=await r.json(); 
+    const box=$("histContent");
+    box.innerHTML=hist.length
+      ? hist.map(h=>`
+        <div style="border-bottom:1px solid #22314b;padding:8px 0">
+          <b>${h.data} ${h.hora}</b><br>
+          Status: <span style="color:#0af">${h.status}</span><br>
+          ${h.obs? "Obs: "+h.obs:""}
+        </div>`).join("")
+      : "<i>Sem histórico registrado</i>";
+    $("modalHist").style.display="flex";
+  }catch(e){console.error(e);alert("Erro ao carregar histórico");}
+  hideOverlay();
+}
+function fecharHist(){$("modalHist").style.display="none"}
+
+function renderLista(){
+  const lista=$("lista");lista.innerHTML="";SELEC=[];$("master").checked=false;
+  let totalItens=0;
+  for(const emp of Object.keys(TITULOS)){
+    const arr=TITULOS[emp]||[];
+    arr.forEach((t)=>{
+      totalItens++;
+      const valor=Number(String(t.valor).replace("R$","").replace(/\./g,"").replace(",","."))||0;
+      const id=ID(emp,t.linha);
+      const st=(t.status || "Pendente");
+      const obs=(t.observacao || "");
+      const card=document.createElement("div");
+      card.className="titulo";card.dataset.id=id;card.dataset.emp=emp;card.dataset.linha=t.linha;card.dataset.valor=valor;
+      card.innerHTML=`
+        <div class="ck"><input type="checkbox" onchange="toggleSel(this)" /></div>
+        <div class="info">
+          <div class="row"><b>${t.fornecedor}</b> • ${emp}</div>
+          <div class="row">Venc: <b>${iso(t.vencimento).split("-").reverse().join("/")}</b> • Meio: <b>${t.meio_pagamento||"Outros"}</b></div>
+          <div class="row">Valor: <b>${BRL(valor)}</b> <span class="pill" data-status>${st}</span></div>
+          ${obs ? `<div class="row obs" style="color:#60a5fa">Obs: ${obs}</div>` : ""}
+        </div>
+        <div class="actions">
+          <button class="mini obs" onclick="event.stopPropagation();abrirObs('${id}','${emp}',${t.linha},\`${obs}\`)">✏️ Obs</button>
+          <button class="mini aprovar" onclick="event.stopPropagation();acaoStatus(this,'Aprovado')">✓ Aprovar</button>
+          <button class="mini negar" onclick="event.stopPropagation();acaoStatus(this,'Negado')">✗ Negar</button>
+          <button class="mini hist" onclick="event.stopPropagation();abrirHistorico('${id}','${emp}',${t.linha})">📜 Histórico</button>
+        </div>`;
+      setPill(card.querySelector("[data-status]"),st);
+      lista.appendChild(card);
+    });
+  }
+  $("contagem").textContent=`${totalItens} ${totalItens===1?"item":"itens"}`;
+}
+
+function setPill(el,status){
+  el.className="pill";
+  if(status==="Aprovado"){el.classList.add("ok");el.textContent="Aprovado"}
+  else if(status==="Negado"){el.classList.add("warn");el.textContent="Negado"}
+  else el.textContent=status;
+}
+
+$("master").onchange=()=>{document.querySelectorAll("#lista .ck input").forEach(cb=>{cb.checked=$("master").checked;cb.dispatchEvent(new Event("change"))})};
+function toggleSel(chk){
+  const card=chk.closest(".titulo");
+  const id=card.dataset.id,emp=card.dataset.emp,linha=Number(card.dataset.linha),valor=Number(card.dataset.valor)||0;
+  if(chk.checked)SELEC.push({id,emp,linha,valor}); else SELEC=SELEC.filter(x=>x.id!==id);
+  renderSelecionados();
+}
+function renderSelecionados(){
+  const total=SELEC.reduce((s,x)=>s+x.valor,0);
+  if(SELEC.length){$("bubble").style.display="block";$("btnMassa").style.display="block";$("bubble").textContent="Total selecionado: "+BRL(total)}
+  else{$("bubble").style.display="none";$("btnMassa").style.display="none"}}
+
+async function acaoStatus(btn,novo){
+  const card=btn.closest(".titulo");
+  const emp=card.dataset.emp,linha=card.dataset.linha;
+  btn.classList.add("loading");
+  setPill(card.querySelector("[data-status]"),novo);
+  try{await fetch(`${endpointTitulos}?action=atualizar&empresa=${encodeURIComponent(emp)}&linha=${linha}&status=${encodeURIComponent(novo)}`);}catch(e){console.error(e)}
+  btn.classList.remove("loading");
+}
+
+async function atualizarStatusMassa(novo="Aprovado"){
+  showOverlay();
+  for(const s of SELEC){
+    const card=document.querySelector(`.titulo[data-id="${s.id}"]`);
+    if(!card) continue;
+    setPill(card.querySelector("[data-status]"),novo);
+    try{await fetch(`${endpointTitulos}?action=atualizar&empresa=${encodeURIComponent(s.emp)}&linha=${s.linha}&status=${encodeURIComponent(novo)}`);}catch(e){console.error(e)}
+    card.querySelector(".ck input").checked=false;
+  }
+  SELEC=[];$("master").checked=false;renderSelecionados();hideOverlay();
+}
+$("btnMassa").onclick=()=>atualizarStatusMassa("Aprovado");
+
+function abrirObs(id,emp,linha,txt){
+  obsContext={id,emp,linha};
+  $("textoObs").value=txt||"";$("modalObs").style.display="flex";
+}
+function fecharObs(){$("modalObs").style.display="none"}
+async function salvarObs(){
+  const {emp,linha}=obsContext;
+  const texto=$("textoObs").value.trim();
+  if(!texto)return;
+  showOverlay();
+  try{
+    const r=await fetch(`${endpointTitulos}?action=atualizarObservacao&empresa=${encodeURIComponent(emp)}&linha=${linha}&texto=${encodeURIComponent(texto)}`);
+    const resp=await r.json();
+    if(resp.sucesso){
+      const card=document.querySelector(`.titulo[data-emp="${emp}"][data-linha="${linha}"]`);
+      if(card){
+        let rowObs=card.querySelector(".row.obs");
+        if(!rowObs){
+          rowObs=document.createElement("div");
+          rowObs.className="row obs";
+          card.querySelector(".info").appendChild(rowObs);
+        }
+        rowObs.textContent="Obs: "+texto;
+      }
+    }else{alert("Erro: "+(resp.erro||"Falha ao salvar"));}
+  }catch(e){console.error(e)}
+  hideOverlay();fecharObs();
+}
 
 async function loadTitulos(empresas,inicio,fim,filtroStatus,filtroMeio){
   TITULOS={};
@@ -149,7 +299,6 @@ async function loadTitulos(empresas,inicio,fim,filtroStatus,filtroMeio){
     TITULOS[emp]=arr;
   });
 }
-
 async function refresh(inicio,fim){
   showOverlay();
   const filtro=$("filtroStatus").value;
@@ -160,46 +309,18 @@ async function refresh(inicio,fim){
   renderLista();hideOverlay();
 }
 
-function renderLista(){
-  const lista=$("lista");lista.innerHTML="";SELEC=[];$("master").checked=false;
-  let totalItens=0;
-  for(const emp of Object.keys(TITULOS)){
-    const arr=TITULOS[emp]||[];
-    arr.forEach((t)=>{
-      totalItens++;
-      const valor=Number(String(t.valor).replace("R$","").replace(/\./g,"").replace(",","."))||0;
-      const st=(t.status || "Pendente");
-      const card=document.createElement("div");
-      card.className="titulo";
-      card.innerHTML=`<div class="row"><b>${t.fornecedor}</b> • ${emp}</div>
-      <div class="row">Venc: <b>${iso(t.vencimento).split("-").reverse().join("/")}</b> • Meio: <b>${t.meio_pagamento||"Outros"}</b></div>
-      <div class="row">Valor: <b>${BRL(valor)}</b> <span class="pill">${st}</span></div>`;
-      lista.appendChild(card);
-    });
-  }
-  $("contagem").textContent=`${totalItens} itens`;
-}
-
 (function boot(){
-  const hoje=iso(new Date());
-  flatpickr("#filtroPeriodo",{mode:"range",dateFormat:"Y-m-d",locale:"pt",defaultDate:[hoje,hoje],
-    onClose:function(sel){if(sel.length===2){const [ini,fim]=sel.map(d=>iso(d));refresh(ini,fim);}}
+  const hoje = iso(new Date());
+  flatpickr("#filtroPeriodo", {
+    mode: "range",dateFormat: "Y-m-d",locale: "pt",defaultDate: [hoje, hoje],
+    onClose: function(sel){if(sel.length===2){const [ini,fim]=sel.map(d=>iso(d));refresh(ini,fim);}}
   });
-
-  const M=$("menuEmpresas");
-  EMP_DEFAULT.forEach((emp,i)=>{
-    const lbl=document.createElement("label");
-    lbl.innerHTML=`<input type="radio" name="empresaSel" value="${emp}" ${i===0?"checked":""}/> ${emp}`;
-    lbl.querySelector("input").onchange=()=>{refresh(hoje,hoje);M.style.display="none"};
-    M.appendChild(lbl);
-  });
-
+  const M = $("menuEmpresas");
+  EMP_DEFAULT.forEach((emp,i)=>{const lbl=document.createElement("label");lbl.innerHTML=`<input type="radio" name="empresaSel" value="${emp}" ${i===0?"checked":""}/> ${emp}`;lbl.querySelector("input").onchange=()=>{refresh(hoje,hoje);M.style.display="none"};M.appendChild(lbl);});
   $("btnEmpresas").onclick=(e)=>{e.stopPropagation();M.style.display=M.style.display==="block"?"none":"block";};
   document.addEventListener("click",(e)=>{if(!M.contains(e.target)&&e.target.id!=="btnEmpresas"){M.style.display="none";}});
-
   $("filtroStatus").onchange=()=>refresh(hoje,hoje);
   $("filtroMeio").onchange=()=>refresh(hoje,hoje);
-
   refresh(hoje,hoje);
 })();
 </script>
