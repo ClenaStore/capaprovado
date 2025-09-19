@@ -86,11 +86,11 @@
     </select>
     <input type="text" id="filtroPeriodo" placeholder="Selecione período" />
     <select id="filtroEmpresa">
-      <option>CAP DELICIA</option>
-      <option>CAP VILLA</option>
-      <option>CAP PADARIA</option>
-      <option>CAP MERCATTO</option>
-      <option>CAP M.KIDS</option>
+      <option value="cap delicia">cap delicia</option>
+      <option value="cap villa">cap villa</option>
+      <option value="cap padaria">cap padaria</option>
+      <option value="cap mercatto">cap mercatto</option>
+      <option value="cap m.kids">cap m.kids</option>
     </select>
   </div>
 
@@ -230,8 +230,7 @@ async function refresh(){
   const data=await r.json();
   TITULOS=(data.titulos||data).filter(t=>{
     const d=iso(t.vencimento);
-    const st=t.status||"";
-    const mp=(t.meio_pagamento||"Outros");
+    const st=t.status||""; const mp=(t.meio_pagamento||"Outros");
     return (!status||st===status)&&
            (meio==="Todos"||mp===meio)&&
            (!ini||d>=ini)&&(!fim||d<=fim);
