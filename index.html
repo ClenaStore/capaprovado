@@ -46,7 +46,14 @@
 
     padding:10px 14px;border-radius:10px;font-size:15px;width:100%}
 
-  .statusResumoWrapper{display:flex;align-items:center;gap:12px;margin-bottom:12px;padding-left:4px}
+.statusResumoWrapper {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 12px;
+  padding-left: 4px;
+  flex-wrap: wrap; /* permite quebrar se faltar espaço */
+}
   .statusResumo{display:flex;gap:16px;flex-wrap:wrap}
   .statusResumo div{font-size:14px;font-weight:600}
   .statusResumo .aprovado{color:var(--green)}
@@ -63,10 +70,26 @@
     display:none;
   }
   .mini-spinner.active{display:inline-block;}
-  #lastUpdate {
+  
+#miniSpinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--ink);
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  display: none; /* só aparece quando ativo */
+}
+
+#miniSpinner.active {
+  display: inline-block;
+}
+#lastUpdate {
   font-size: 13px;
   color: var(--muted);
-  margin-right: 12px; /* dá um respiro antes dos status */
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 #barraPesquisa {
   background:#0b1528;
@@ -209,11 +232,12 @@
     </button>
   </div>
   <div id="totaisWrapper"></div>
- <div class="statusResumoWrapper">
+<div class="statusResumoWrapper">
   <div id="lastUpdate"></div>
   <div id="statusResumo" class="statusResumo"></div>
   <div id="miniSpinner" class="mini-spinner"></div>
 </div>
+
 
 </header>
 
