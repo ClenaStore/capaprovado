@@ -6,6 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script> <!-- 👈 Adicione isso -->
 <style>
   :root{
     --bg:#0b1220;--card:#0f172a;--ink:#e5f0ff;--muted:#a8b3c7;--line:#243043;
@@ -399,7 +400,14 @@ $("btnTotais").onclick = () => {
 
 (function boot(){
   const hoje=iso(new Date());
-  flatpickr("#filtroPeriodo",{mode:"range",dateFormat:"Y-m-d",defaultDate:[hoje,hoje],onClose:()=>refresh(false)});
+  flatpickr("#filtroPeriodo",{
+  mode:"range",
+  dateFormat:"d/m/Y",
+  locale:"pt",           // 👈 aqui
+  defaultDate:[hoje,hoje],
+  onClose:()=>refresh(false)
+});
+
   ["filtroStatus","filtroMeio","filtroEmpresa"].forEach(id=>{$(id).onchange=()=>refresh(false);});
   refresh(false);
   setInterval(()=>refresh(true),10*1000); // auto refresh 10s
