@@ -319,6 +319,11 @@ async function liquidarMassa(){
   atualizarBtnMassa();
 }
 $("btnMassa").onclick=liquidarMassa;
+function parseDMY(str) {
+  if (!str) return "";
+  const [d,m,y] = str.split("/");
+  return `${y}-${m.padStart(2,"0")}-${d.padStart(2,"0")}`;
+}
 
 async function refresh(auto=false){
   if(auto){$("miniSpinner").classList.add("active");}
@@ -347,23 +352,20 @@ try{
 
   // lê o período atualizado pelo flatpickr
   const periodo=$("filtroPeriodo").value;
-  const [ini,fim]=periodo.includes(" to ")?periodo.split(" to "):[periodo,periodo];
+  const [ini,fim] = periodo.includes(" a ") ? periodo.split(" a ") : [periodo,periodo];
 
   // aplica filtros
   TITULOS=todos.filter(t=>{
     const d=iso(t.vencimento);
     const st=t.status||"";
     const mp=(t.meio_pagamento||"Outros");
-    return (!status||st===status)&&(meio==="Todos"||mp===meio)&&(!ini||d>=ini)&&(!fim||d<=fim);
+    return (!status||st===status)&&(meio==="Todos"||mp===meio)&&(!ini||d>=parseDMY(ini)) && (!fim||d<=parseDMY(fim));
   });
 
   renderLista();
   atualizarResumo(todos);
   $("lastUpdate").textContent="Última atualização: "+new Date().toLocaleTimeString("pt-BR");
 
-
-    
-    $("lastUpdate").textContent="Última atualização: "+new Date().toLocaleTimeString("pt-BR");
   }catch(e){console.error(e);}
   finally{
     if(auto){$("miniSpinner").classList.remove("active");}
