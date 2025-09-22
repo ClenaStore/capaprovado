@@ -18,7 +18,27 @@
     border-bottom:1px solid var(--line);padding:14px}
   header h1{font-size:18px;margin:0 0 12px 0;font-weight:800}
 
-  .row-filtros{display:flex;gap:8px;width:100%;margin-bottom:8px;flex-wrap:wrap}
+/* Cabeçalho compacto */
+.row-filtros{
+  display: grid;
+  grid-template-columns: repeat(4, 1fr); /* 4 colunas lado a lado */
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.row-filtros select,
+.row-filtros input {
+  width: 100%; /* cada filtro ocupa sua célula */
+}
+
+/* Responsividade */
+@media (max-width: 900px) {
+  .row-filtros { grid-template-columns: 1fr 1fr; } /* 2 colunas no tablet */
+}
+@media (max-width: 600px) {
+  .row-filtros { grid-template-columns: 1fr; }     /* 1 coluna no celular */
+}
+
   select,input{background:#0b1528;border:1px solid #22314b;color:var(--ink);
     padding:10px 14px;border-radius:10px;font-size:15px;width:100%}
 
