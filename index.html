@@ -326,16 +326,43 @@ async function refresh(auto=false){
   const status=$("filtroStatus").value;
   const meio=$("filtroMeio").value;
   const empresa=$("filtroEmpresa").value;
+
+  
+try{
+  const r=await fetch(`${endpoint}?action=listar&empresa=${encodeURIComponent(empresa)}`);
+  const data=await r.json();
+  const todos = data.titulos || data;
+
+  // calcula menor e maior vencimento dos aprovados
+  const aprovados = todos.filter(t => t.status === "Aprovado");
+  if (aprovados.length) {
+    const datas = aprovados.map(t => iso(t.vencimento)).sort();
+    const min = datas[0];
+    const max = datas[datas.length-1];
+    const fp = document.querySelector("#filtroPeriodo")._flatpickr;
+    if (fp) {
+      fp.setDate([min, max], false); // false = não dispara onClose de novo
+    }
+  }
+
+  // lê o período atualizado pelo flatpickr
   const periodo=$("filtroPeriodo").value;
   const [ini,fim]=periodo.includes(" to ")?periodo.split(" to "):[periodo,periodo];
-  try{
-    const r=await fetch(`${endpoint}?action=listar&empresa=${encodeURIComponent(empresa)}`);
-    const data=await r.json();
-    TITULOS=(data.titulos||data).filter(t=>{
-      const d=iso(t.vencimento);const st=t.status||"";const mp=(t.meio_pagamento||"Outros");
-      return (!status||st===status)&&(meio==="Todos"||mp===meio)&&(!ini||d>=ini)&&(!fim||d<=fim);
-    });
-    renderLista();atualizarResumo(data.titulos||data);
+
+  // aplica filtros
+  TITULOS=todos.filter(t=>{
+    const d=iso(t.vencimento);
+    const st=t.status||"";
+    const mp=(t.meio_pagamento||"Outros");
+    return (!status||st===status)&&(meio==="Todos"||mp===meio)&&(!ini||d>=ini)&&(!fim||d<=fim);
+  });
+
+  renderLista();
+  atualizarResumo(todos);
+  $("lastUpdate").textContent="Última atualização: "+new Date().toLocaleTimeString("pt-BR");
+
+
+    
     $("lastUpdate").textContent="Última atualização: "+new Date().toLocaleTimeString("pt-BR");
   }catch(e){console.error(e);}
   finally{
