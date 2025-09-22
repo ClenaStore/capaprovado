@@ -25,8 +25,17 @@
     gap: 8px;
     margin-bottom: 8px;
   }
-  .row-filtros select,
-  .row-filtros input { width: 100%; }
+.row-filtros select,
+.row-filtros input {
+  background:#0b1528;
+  border:1px solid #22314b;
+  color:var(--ink);
+  padding:8px 10px;   /* 🔽 menor altura */
+  border-radius:8px;
+  font-size:14px;     /* 🔽 menor fonte */
+  width:100%;
+}
+
   @media (max-width: 900px) {
     .row-filtros { grid-template-columns: 1fr 1fr; }
   }
@@ -34,7 +43,6 @@
     .row-filtros { grid-template-columns: 1fr; }
   }
 
-  select,input{background:#0b1528;border:1px solid #22314b;color:var(--ink);
     padding:10px 14px;border-radius:10px;font-size:15px;width:100%}
 
   .statusResumoWrapper{display:flex;align-items:center;gap:12px;margin-bottom:12px;padding-left:4px}
@@ -55,6 +63,15 @@
   }
   .mini-spinner.active{display:inline-block;}
   #lastUpdate{font-size:12px;color:var(--muted)}
+#barraPesquisa {
+  background:#0b1528;
+  border:1px solid #22314b;
+  color:var(--ink);
+  padding:8px 10px;
+  border-radius:8px;
+  font-size:14px;
+  width:100%;
+}
 
   .container{padding:16px;max-width:100%;margin:0 auto}
   .lista{display:flex;flex-direction:column;gap:16px;width:100%}
@@ -153,29 +170,34 @@
 <body>
 <header>
   <h1>CAP APROVADO</h1>
-  <div class="row-filtros">
-    <select id="filtroStatus">
-      <option value="Aprovado" selected>Aprovados</option>
-      <option value="Negado">Negados</option>
-      <option value="Pendente">Pendentes</option>
-      <option value="Liquidado">Liquidados</option>
-    </select>
-    <select id="filtroMeio">
-      <option value="Todos" selected>Todos</option>
-      <option value="Pix">Pix</option>
-      <option value="Cartão">Cartão</option>
-      <option value="Boleto">Boleto</option>
-      <option value="Outros">Outros</option>
-    </select>
-    <input type="text" id="filtroPeriodo" placeholder="Selecione período" />
-    <select id="filtroEmpresa">
-      <option value="cap delicia">DELÍCIA GOURMET</option>
-      <option value="cap villa">VILLA GOURMET</option>
-      <option value="cap padaria">PADARIA DELÍCIA</option>
-      <option value="cap mercatto">MERCATTO</option>
-      <option value="cap m.kids">M.KIDS</option>
-    </select>
-  </div>
+<div class="row-filtros">
+  <select id="filtroStatus">
+    <option value="Aprovado" selected>Aprovados</option>
+    <option value="Negado">Negados</option>
+    <option value="Pendente">Pendentes</option>
+    <option value="Liquidado">Liquidados</option>
+  </select>
+  
+  <!-- 🔍 Barra de pesquisa logo depois do status -->
+  <input type="text" id="barraPesquisa" placeholder="🔍 Pesquisar..." />
+  
+  <select id="filtroMeio">
+    <option value="Todos" selected>Todos</option>
+    <option value="Pix">Pix</option>
+    <option value="Cartão">Cartão</option>
+    <option value="Boleto">Boleto</option>
+    <option value="Outros">Outros</option>
+  </select>
+
+  <input type="text" id="filtroPeriodo" placeholder="Selecione período" />
+  <select id="filtroEmpresa">
+    <option value="cap delicia">DELÍCIA GOURMET</option>
+    <option value="cap villa">VILLA GOURMET</option>
+    <option value="cap padaria">PADARIA DELÍCIA</option>
+    <option value="cap mercatto">MERCATTO</option>
+    <option value="cap m.kids">M.KIDS</option>
+  </select>
+</div>
   <div style="margin-top:8px;">
     <button id="btnTotais" class="btn" style="background:#22314b;color:#fff;width:100%;border-radius:8px;padding:10px;">
       📊 Ver Totais
@@ -213,8 +235,18 @@ function restaurarSelecoes(){const ids=JSON.parse(localStorage.getItem("titulosS
 function renderLista(){
   const lista=$("lista");lista.innerHTML="";SELEC=[];
   const abaSelecionada=$("filtroEmpresa").value;
-  TITULOS.forEach(t=>{
-    const card=document.createElement("div");
+  const termo = $("barraPesquisa").value.toLowerCase(); // 🔍 pega o texto
+
+  TITULOS
+    .filter(t => {
+      return !termo || 
+             (t.fornecedor && t.fornecedor.toLowerCase().includes(termo)) ||
+             (t.empresa && t.empresa.toLowerCase().includes(termo)) ||
+             (t.meio_pagamento && t.meio_pagamento.toLowerCase().includes(termo)) ||
+             (t.status && t.status.toLowerCase().includes(termo));
+    })
+    .forEach(t=>{
+      const card=document.createElement("div");
     card.className="titulo";
     card.dataset.linha=t.linha;
     card.dataset.emp=abaSelecionada;
@@ -434,6 +466,7 @@ $("btnTotais").onclick = () => {
     defaultDate:[hoje,hoje],
     onClose:()=>refresh(false)
   });
+  $("barraPesquisa").addEventListener("input", ()=>renderLista());
   ["filtroStatus","filtroMeio","filtroEmpresa"].forEach(id=>{$(id).onchange=()=>refresh(false);});
   refresh(false);
   setInterval(()=>refresh(true),10*1000);
