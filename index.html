@@ -7,7 +7,7 @@
 <style>
   :root{
     --bg:#0b1220;--card:#0f172a;--ink:#e5f0ff;--muted:#a8b3c7;--line:#243043;
-    --green:#16a34a;--blue:#3b82f6;
+    --green:#16a34a;--amber:#f59e0b;--red:#ef4444;--blue:#3b82f6;
   }
   *{box-sizing:border-box}
   body{margin:0;font-family:Inter,system-ui;background:var(--bg);color:var(--ink);font-size:15px}
@@ -18,7 +18,7 @@
 
 .row-filtros{
   display: grid;
-  grid-template-columns: 1fr 150px 160px;
+  grid-template-columns: 140px 1fr 150px 160px;
   gap: 8px;
   margin-bottom: 8px;
 }
@@ -49,7 +49,10 @@
   flex-wrap: wrap;
 }
 .statusResumo{display:flex;gap:16px;flex-wrap:wrap}
-.statusResumo div{font-size:14px;font-weight:600;color:var(--green)}
+.statusResumo div{font-size:14px;font-weight:600}
+.statusResumo .aprovado{color:var(--green)}
+.statusResumo .pendente{color:var(--amber)}
+.statusResumo .negado{color:var(--red)}
 
 #miniSpinner {
   width: 14px;
@@ -139,6 +142,12 @@
 <header>
   <h1>CAP APROVADO</h1>
 <div class="row-filtros">
+  <select id="filtroStatus">
+    <option value="Aprovado" selected>Aprovados</option>
+    <option value="Negado">Negados</option>
+    <option value="Pendente">Pendentes</option>
+  </select>
+
   <input type="text" id="barraPesquisa" placeholder="🔍 Pesquisar..." />
   
   <select id="filtroMeio">
@@ -213,6 +222,7 @@ function renderLista(){
 async function refresh(auto=false){
   if(auto){$("miniSpinner").classList.add("active");}
   else{$("overlay").classList.add("active");}
+  const status=$("filtroStatus").value;
   const meio=$("filtroMeio").value;
   const empresa=$("filtroEmpresa").value;
 
@@ -224,12 +234,12 @@ async function refresh(auto=false){
     TITULOS = todos.filter(t => {
       const st = t.status || "";
       const mp = (t.meio_pagamento || "Outros");
-      return (st === "Aprovado") && (meio === "Todos" || mp === meio);
+      return (st === status) && (meio === "Todos" || mp === meio);
     });
 
     renderLista();
     $("lastUpdate").textContent="Última atualização: "+new Date().toLocaleTimeString("pt-BR");
-    $("statusResumo").innerHTML=`<div class="aprovado">Total Aprovados: ${TITULOS.length}</div>`;
+    $("statusResumo").innerHTML=`<div class="${status.toLowerCase()}">Total ${status}: ${TITULOS.length}</div>`;
   }catch(e){console.error(e);}
   finally{
     if(auto){$("miniSpinner").classList.remove("active");}
@@ -265,7 +275,7 @@ $("btnTotais").onclick = () => {
 
 (function boot(){
   $("barraPesquisa").addEventListener("input", ()=>renderLista());
-  ["filtroMeio","filtroEmpresa"].forEach(id=>{$(id).onchange=()=>refresh(false);});
+  ["filtroStatus","filtroMeio","filtroEmpresa"].forEach(id=>{$(id).onchange=()=>refresh(false);});
   refresh(false);
   setInterval(()=>refresh(true),10*1000);
 })();
