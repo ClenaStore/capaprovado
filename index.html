@@ -19,12 +19,13 @@
     border-bottom:1px solid var(--line);padding:14px}
   header h1{font-size:18px;margin:0 0 12px 0;font-weight:800}
 
-  .row-filtros{
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 8px;
-    margin-bottom: 8px;
-  }
+.row-filtros{
+  display: grid;
+  grid-template-columns: 120px 1fr 120px 180px 160px; /* 🔹 larguras fixas + flexível */
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
 .row-filtros select,
 .row-filtros input {
   background:#0b1528;
