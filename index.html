@@ -338,7 +338,7 @@ async function refresh(auto=false){
     }
 
     const periodo=$("filtroPeriodo").value;
-    const [ini,fim] = periodo.includes(" a ") ? periodo.split(" a ") : [periodo,periodo];
+    const [ini,fim] = periodo.includes(" até ") ? periodo.split(" até ") : [periodo,periodo];
 
     TITULOS=todos.filter(t=>{
       const d=iso(t.vencimento);
