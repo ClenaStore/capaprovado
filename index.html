@@ -18,12 +18,12 @@
     border-bottom:1px solid var(--line);padding:14px}
   header h1{font-size:18px;margin:0 0 12px 0;font-weight:800}
 
-  .row-filtros{display:flex;gap:8px;width:100%;margin-bottom:8px}
+  .row-filtros{display:flex;gap:8px;width:100%;margin-bottom:8px;flex-wrap:wrap}
   select,input{background:#0b1528;border:1px solid #22314b;color:var(--ink);
     padding:10px 14px;border-radius:10px;font-size:15px;width:100%}
 
   .statusResumoWrapper{display:flex;align-items:center;gap:12px;margin-bottom:12px;padding-left:4px}
-  .statusResumo{display:flex;gap:16px}
+  .statusResumo{display:flex;gap:16px;flex-wrap:wrap}
   .statusResumo div{font-size:14px;font-weight:600}
   .statusResumo .aprovado{color:var(--green)}
   .statusResumo .pendente{color:var(--amber)}
@@ -115,6 +115,30 @@
     border:4px solid #fff;border-top-color:transparent;
     border-radius:50%;animation:spin 1s linear infinite;
   }
+
+  /* --- Totais --- */
+  #totaisWrapper {
+    margin: 12px 0;
+    display: none;
+  }
+  #totaisWrapper.active {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .total-card {
+    flex: 1 1 45%;
+    background: #101a2f;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 10px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--ink);
+  }
 </style>
 </head>
 <body>
@@ -143,6 +167,15 @@
       <option value="cap m.kids">M.KIDS</option>
     </select>
   </div>
+
+  <!-- Botão Ver Totais -->
+  <div style="margin-top:8px;">
+    <button id="btnTotais" class="btn" style="background:#22314b;color:#fff;width:100%;border-radius:8px;padding:10px;">
+      📊 Ver Totais
+    </button>
+  </div>
+  <div id="totaisWrapper"></div>
+
   <div class="statusResumoWrapper">
     <div id="statusResumo" class="statusResumo"></div>
     <div id="miniSpinner" class="mini-spinner"></div>
@@ -313,6 +346,36 @@ function atualizarBtnMassa(){
     btnMassa.classList.remove("show");
   }
 }
+
+/* --- Totais --- */
+$("btnTotais").onclick = () => {
+  const wrapper = $("totaisWrapper");
+  wrapper.classList.toggle("active");
+
+  if(wrapper.classList.contains("active")){
+    const totais = {};
+    TITULOS.filter(t => t.status !== "Negado").forEach(t => {
+      const meio = t.meio_pagamento || "Outros";
+      const valor = Number(String(t.valor).replace("R$","").replace(/\./g,"").replace(",",".")) || 0;
+      totais[meio] = (totais[meio] || 0) + valor;
+    });
+
+    wrapper.innerHTML = "";
+    Object.entries(totais).forEach(([meio, valor]) => {
+      const card = document.createElement("div");
+      card.className = "total-card";
+      card.innerHTML = `<span>${meio}</span><span>${BRL(valor)}</span>`;
+      wrapper.appendChild(card);
+    });
+
+    const totalGeral = Object.values(totais).reduce((a,b)=>a+b,0);
+    const cardTotal = document.createElement("div");
+    cardTotal.className = "total-card";
+    cardTotal.style.background = "linear-gradient(90deg,var(--blue),var(--green))";
+    cardTotal.innerHTML = `<span>Total</span><span>${BRL(totalGeral)}</span>`;
+    wrapper.appendChild(cardTotal);
+  }
+};
 
 (function boot(){
   const hoje=iso(new Date());
