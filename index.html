@@ -4,9 +4,6 @@
 <meta charset="UTF-8" />
 <title>CAP APROVADO</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
 <style>
   :root{
     --bg:#0b1220;--card:#0f172a;--ink:#e5f0ff;--muted:#a8b3c7;--line:#243043;
@@ -21,11 +18,10 @@
 
 .row-filtros{
   display: grid;
-  grid-template-columns: 1fr 150px 180px 160px;
+  grid-template-columns: 1fr 150px 160px;
   gap: 8px;
   margin-bottom: 8px;
 }
-
 .row-filtros select,
 .row-filtros input {
   background:#0b1528;
@@ -37,10 +33,10 @@
   width:100%;
 }
 
-  @media (max-width: 900px) {
+  @media (max-width: 800px) {
     .row-filtros { grid-template-columns: 1fr 1fr; }
   }
-  @media (max-width: 600px) {
+  @media (max-width: 500px) {
     .row-filtros { grid-template-columns: 1fr; }
   }
 
@@ -48,7 +44,7 @@
   display: flex;
   align-items: center;
   gap: 16px;
-  margin-bottom: 12px;
+  margin-top: 12px;
   padding-left: 4px;
   flex-wrap: wrap;
 }
@@ -153,7 +149,6 @@
     <option value="Outros">Outros</option>
   </select>
 
-  <input type="text" id="filtroPeriodo" placeholder="Selecione período" />
   <select id="filtroEmpresa">
     <option value="cap delicia">DELÍCIA GOURMET</option>
     <option value="cap villa">VILLA GOURMET</option>
@@ -215,12 +210,6 @@ function renderLista(){
     });
 }
 
-function toDate(str){
-  if (!str) return null;
-  if (str.includes("-")) { return new Date(str+"T00:00:00"); }
-  else { const [d,m,y] = str.split("/"); return new Date(`${y}-${m}-${d}T00:00:00`); }
-}
-
 async function refresh(auto=false){
   if(auto){$("miniSpinner").classList.add("active");}
   else{$("overlay").classList.add("active");}
@@ -232,19 +221,10 @@ async function refresh(auto=false){
     const data=await r.json();
     const todos = data.titulos || data;
 
-    const periodo=$("filtroPeriodo").value;
-    const [ini,fim] = periodo.includes(" até ") ? periodo.split(" até ") : [periodo,periodo];
-
     TITULOS = todos.filter(t => {
-      const d = toDate(iso(t.vencimento));
       const st = t.status || "";
       const mp = (t.meio_pagamento || "Outros");
-      const iniDate = toDate(ini);
-      const fimDate = toDate(fim);
-      return (st === "Aprovado")
-          && (meio === "Todos" || mp === meio)
-          && (!iniDate || d >= iniDate)
-          && (!fimDate || d <= fimDate);
+      return (st === "Aprovado") && (meio === "Todos" || mp === meio);
     });
 
     renderLista();
@@ -284,14 +264,6 @@ $("btnTotais").onclick = () => {
 };
 
 (function boot(){
-  const hoje=iso(new Date());
-  flatpickr("#filtroPeriodo",{
-    mode:"range",
-    dateFormat:"d/m/Y",
-    locale:"pt",
-    defaultDate:[hoje,hoje],
-    onClose:()=>refresh(false)
-  });
   $("barraPesquisa").addEventListener("input", ()=>renderLista());
   ["filtroMeio","filtroEmpresa"].forEach(id=>{$(id).onchange=()=>refresh(false);});
   refresh(false);
