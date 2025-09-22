@@ -319,7 +319,7 @@ function atualizarBtnMassa(){
   flatpickr("#filtroPeriodo",{mode:"range",dateFormat:"Y-m-d",defaultDate:[hoje,hoje],onClose:()=>refresh(false)});
   ["filtroStatus","filtroMeio","filtroEmpresa"].forEach(id=>{$(id).onchange=()=>refresh(false);});
   refresh(false);
-  setInterval(()=>refresh(true),20*60*1000); // auto refresh 20min
+  setInterval(()=>refresh(true),10*1000); // auto refresh 10s
 })();
 </script>
 </body>
