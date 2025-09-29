@@ -54,6 +54,11 @@
   padding-left: 4px;
   flex-wrap: wrap; /* permite quebrar se faltar espaço */
 }
+  .obs-leonardo {
+  color: var(--red);
+  font-weight: 700;
+}
+
   .statusResumo{display:flex;gap:16px;flex-wrap:wrap}
   .statusResumo div{font-size:14px;font-weight:600}
   .statusResumo .aprovado{color:var(--green)}
@@ -286,7 +291,7 @@ function renderLista(){
       <div class="row">Venc: <b>${iso(t.vencimento).split("-").reverse().join("/")}</b> • Meio: <b>${t.meio_pagamento||"Outros"}</b></div>
       <div class="row">Valor: <b>${BRL(valor)}</b></div>
       <div class="row">Histórico: <b>${historico||"-"}</b></div>
-      <div class="row">Obs de Leonardo: <b>${obs||"-"}</b></div>
+      <div class="row">Obs de Leonardo: <b class="obs-leonardo">${obs||"-"}</b></div>
       <div class="acoes">
         <button class="btn liquidar" onclick="liquidar(this)" ${st!=="Aprovado"?"disabled style='opacity:0.5;cursor:not-allowed'":""}>✓ Liquidar</button>
       </div>`;
