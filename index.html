@@ -291,7 +291,13 @@ function renderLista(){
       <div class="row">Venc: <b>${iso(t.vencimento).split("-").reverse().join("/")}</b> • Meio: <b>${t.meio_pagamento||"Outros"}</b></div>
       <div class="row">Valor: <b>${BRL(valor)}</b></div>
       <div class="row">Histórico: <b>${historico||"-"}</b></div>
-      <div class="row">Obs de Leonardo: <b class="obs-leonardo">${obs||"-"}</b></div>
+      <div class="row">
+  Obs de Leonardo: 
+  ${obs 
+    ? `<b class="obs-leonardo">${obs}</b>` 
+    : `<b>-</b>`}
+</div>
+
       <div class="acoes">
         <button class="btn liquidar" onclick="liquidar(this)" ${st!=="Aprovado"?"disabled style='opacity:0.5;cursor:not-allowed'":""}>✓ Liquidar</button>
       </div>`;
