@@ -114,7 +114,17 @@
   .ck{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:13px}
   .ck input{width:18px;height:18px}
   .row{display:flex;gap:10px;flex-wrap:wrap;font-size:13px;color:var(--muted);word-break:break-word}
-  .row b{color:var(--ink);font-size:14px}
+  .row b {
+  color: var(--ink);
+  font-size: 14px;
+}
+
+/* sobrescreve a regra acima só para observação */
+.row b.obs-leonardo {
+  color: var(--red) !important;
+  font-weight: 700;
+}
+
 
   .pill{padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700}
   .pill.aprovado{background:#0e2a1b;color:#b6f3c5;border:1px solid #155e32}
